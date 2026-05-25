@@ -871,7 +871,23 @@
         }
 
         function parseHeadersAndData() {
-            const headers = rawData[0].map(h => String(h).trim());
+            // Smart header detection: find the row that contains key column names
+            const keyCols = ['客户', '销售金额', '未结算', '业务员'];
+            let headerRowIndex = 0;
+            for (let i = 0; i < Math.min(rawData.length, 10); i++) {
+                const rowText = rawData[i] ? rawData[i].map(h => String(h).trim()).join('') : '';
+                let matchCount = 0;
+                for (const kc of keyCols) {
+                    if (rowText.includes(kc)) matchCount++;
+                }
+                if (matchCount >= 2) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+            
+            const headers = rawData[headerRowIndex].map(h => String(h).trim());
+            console.log('Detected header at row', headerRowIndex, ':', headers.join(', '));
             
             const colIndices = {
                 docDate: findColumnIndex(headers, 'docDate'),
@@ -883,25 +899,34 @@
                 salesperson: findColumnIndex(headers, 'salesperson'),
                 remark: findColumnIndex(headers, 'remark')
             };
+            
+            // Validate essential columns found
+            if (colIndices.customer === -1 || colIndices.unsettled === -1) {
+                alert('无法识别关键列（客户、未结算），请确认文件格式正确\n检测到的表头: ' + headers.join(', '));
+                return;
+            }
 
-            // Parse cutoff date from row 2
-            const row2 = rawData[1];
-            if (row2 && row2.length > 0) {
-                const row2Text = Array.isArray(row2) ? row2.join(' ') : String(row2);
-                const dateMatch = row2Text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g);
-                if (dateMatch && dateMatch.length >= 2) {
-                    const endDate = dateMatch[dateMatch.length - 1];
-                    cutoffDate = parseDate(endDate);
-                    if (cutoffDate) {
-                        document.getElementById('cutoffDate').value = cutoffDate.toISOString().split('T')[0];
-                        document.getElementById('dateInfo').textContent = `✓ 已从文件解析：${cutoffDate.toLocaleDateString()}`;
+            // Parse cutoff date from rows before header
+            for (let i = 0; i < headerRowIndex; i++) {
+                const row = rawData[i];
+                if (row && row.length > 0) {
+                    const rowText = Array.isArray(row) ? row.filter(r => r != null).join(' ') : String(row);
+                    const dateMatch = rowText.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g);
+                    if (dateMatch && dateMatch.length >= 2) {
+                        const endDate = dateMatch[dateMatch.length - 1];
+                        cutoffDate = parseDate(endDate);
+                        if (cutoffDate) {
+                            document.getElementById('cutoffDate').value = cutoffDate.toISOString().split('T')[0];
+                            document.getElementById('dateInfo').textContent = `✓ 已从文件解析：${cutoffDate.toLocaleDateString()}`;
+                        }
+                        break;
                     }
                 }
             }
 
-            // Parse data rows
+            // Parse data rows (start after header row)
             parsedData = [];
-            for (let i = 2; i < rawData.length; i++) {
+            for (let i = headerRowIndex + 1; i < rawData.length; i++) {
                 const row = rawData[i];
                 if (!row || row.length === 0) continue;
 
@@ -916,9 +941,13 @@
                 };
 
                 const docDateStr = getVal(colIndices.docDate);
+                const unsettledRaw = getVal(colIndices.unsettled);
                 const salesAmount = parseFloat(getVal(colIndices.salesAmount)) || 0;
                 const settled = parseFloat(getVal(colIndices.settled)) || 0;
-                const unsettled = parseFloat(getVal(colIndices.unsettled)) || 0;
+                const unsettled = parseFloat(unsettledRaw) || 0;
+
+                // Only include rows where unsettled has a value (non-empty)
+                if (unsettledRaw === '' || unsettledRaw === null || unsettledRaw === undefined) continue;
 
                 if (unsettled !== 0) {
                     const docDate = parseDate(docDateStr);
