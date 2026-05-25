@@ -79,6 +79,35 @@
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse 800px 600px at 15% 25%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 600px 500px at 85% 75%, rgba(34, 197, 94, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 500px 400px at 70% 15%, rgba(168, 85, 247, 0.04) 0%, transparent 60%);
+            animation: liquidBg 25s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes liquidBg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(1.5%, -0.8%) rotate(0.5deg); }
+            66% { transform: translate(-0.8%, 1.5%) rotate(-0.3deg); }
+            100% { transform: translate(0.8%, -1%) rotate(0.3deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
         }
 
         .container {
@@ -89,14 +118,17 @@
 
         /* Header */
         .header {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(30, 41, 59, 0.65) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
             padding: 24px 32px;
             margin-bottom: 24px;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
         .header-content {
@@ -108,15 +140,17 @@
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+        }
+
+        .header-icon {
+            font-size: 2.2rem;
+            filter: drop-shadow(0 4px 12px rgba(14, 165, 233, 0.4));
         }
 
         .header .subtitle {
@@ -136,36 +170,59 @@
 
         /* Card */
         .card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: 24px;
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 28px;
             margin-bottom: 24px;
         }
 
-        /* Upload Zone */
+        /* Upload Zone - 优化版 */
         .upload-zone {
             border: 2px dashed var(--primary);
-            border-radius: var(--radius-lg);
-            padding: 60px 40px;
+            border-radius: var(--radius-xl);
+            padding: 80px 60px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(56, 189, 248, 0.05) 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(56, 189, 248, 0.03) 100%);
+            position: relative;
+            overflow: hidden;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .upload-zone:hover::before, .upload-zone.dragover::before {
+            opacity: 1;
         }
 
         .upload-zone:hover, .upload-zone.dragover {
             border-color: var(--primary-light);
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%);
-            box-shadow: 0 0 30px rgba(14, 165, 233, 0.2);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(56, 189, 248, 0.08) 100%);
+            box-shadow: 0 0 40px rgba(14, 165, 233, 0.25), 0 8px 32px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
         }
 
         .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 16px;
+            font-size: 4.5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(14, 165, 233, 0.3));
         }
 
         .upload-text {
@@ -222,6 +279,15 @@
         .date-controls .info {
             color: var(--primary-light);
             font-size: 0.85rem;
+            padding-left: 8px;
+            border-left: 2px solid var(--primary);
+            margin-left: 4px;
+        }
+
+        .date-controls label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* Stats Cards */
@@ -233,34 +299,50 @@
         }
 
         .stat-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.3s ease;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 22px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-lighter) 100%);
+            opacity: 0.8;
         }
 
         .stat-card:hover {
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary);
-            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(14, 165, 233, 0.15);
+            border-color: rgba(14, 165, 233, 0.3);
+            transform: translateY(-4px);
         }
 
         .stat-card .stat-label {
             font-size: 0.75rem;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            font-weight: 500;
         }
 
         .stat-card .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: 1.75rem;
+            font-weight: 800;
             color: var(--text-primary);
+            letter-spacing: -0.5px;
+            line-height: 1.2;
         }
 
         .stat-card .stat-value.primary { color: var(--primary-light); }
@@ -281,22 +363,40 @@
 
         .tabs-nav {
             display: flex;
-            gap: 4px;
-            padding: 4px;
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-md);
+            gap: 6px;
+            padding: 6px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
             overflow-x: auto;
             margin-bottom: 20px;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             flex-wrap: nowrap;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .tabs-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tabs-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tabs-nav::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.4);
+            border-radius: 2px;
         }
 
         .tab-btn {
-            padding: 10px 16px;
+            padding: 12px 20px;
             background: transparent;
             border: none;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
             color: var(--text-secondary);
             font-size: 0.85rem;
             cursor: pointer;
@@ -553,6 +653,12 @@
             gap: 12px;
             margin-top: 24px;
             flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .export-buttons .btn {
+            min-width: 140px;
+            justify-content: center;
         }
 
         .btn {
@@ -743,29 +849,30 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
+            <div class="header-icon">📊</div>
             <div class="header-content">
                 <div>
-                    <h1>✅ 应收账款分析工具</h1>
-                    <p class="subtitle">智能分析销售出库单数据 | 账龄预警 | 业务员汇总</p>
+                    <h1>应收账款分析工具</h1>
+                    <p class="subtitle">智能分析销售出库单数据 · 账龄预警 · 业务员汇总</p>
                 </div>
             </div>
         </header>
 
         <!-- Upload Section -->
-        <div id="uploadSection" class="card">
+        <div id="uploadSection" class="card" style="position:relative;overflow:hidden;">
             <div class="upload-zone" id="uploadZone">
                 <input type="file" id="fileInput" class="upload-input" accept=".xlsx,.xls,.csv">
                 <div>
-                    <div class="upload-icon">📁</div>
+                    <div class="upload-icon">📊</div>
                     <p class="upload-text">点击或拖拽上传销售出库单清单</p>
                     <p class="upload-hint">支持 .xlsx、.xls、.csv 格式</p>
                 </div>
             </div>
 
             <div class="date-controls">
-                <label>截止日期：</label>
+                <label>📅 截止日期：</label>
                 <input type="date" id="cutoffDate" value="">
-                <span class="info" id="dateInfo">📋 从文件自动解析</span>
+                <span class="info" id="dateInfo">从文件自动解析</span>
             </div>
         </div>
 
@@ -791,7 +898,6 @@
                 <button class="btn btn-accent" id="screenshotCurrentBtn">
                     📸 截图当前页
                 </button>
-
             </div>
         </div>
     </div>
@@ -2396,40 +2502,9 @@
             });
         }
 
-
-            }
-            
-            if (salesTabs.length === 0) { alert('未找到业务员Tab'); return; }
-            
-            const dateStr = cutoffDate ? cutoffDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            const tabContent = document.getElementById('tabContent');
-            
-            for (const btn of salesTabs) {
-                btn.click();
-                await new Promise(r => setTimeout(r, 300));
-                
-                try {
-                    const canvas = await html2canvas(tabContent, {
-                        backgroundColor: '#0f172a',
-                        scale: 2,
-                        useCORS: true,
-                        logging: false
-                    });
-                    const link = document.createElement('a');
-                    link.download = `应收明细_${btn.textContent.trim()}_${dateStr}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    await new Promise(r => setTimeout(r, 500));
-                } catch (err) {
-                    console.error('Screenshot error for', btn.textContent, err);
-                }
-            }
-        }
-
-
         // ==================== Screenshot Function ====================
         async function screenshotCurrentTab() {
-            const tabContent = document.getElementById('tabContent');
+            const tabContent = document.getElementById('tabContents');
             if (!tabContent) { alert('请先上传数据'); return; }
             
             const activeTab = document.querySelector('.tab-btn.active');
