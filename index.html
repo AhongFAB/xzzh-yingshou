@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="应收账款分析工具 - 智能分析销售出库单数据">
-    <meta name="theme-color" content="#0ea5e9">
+    <meta name="theme-color" content="#0071e3">
     <title>应收账款分析工具</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
@@ -15,55 +15,38 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         :root {
-            /* 天蓝色系主色调 */
-            --primary: #0ea5e9;
-            --primary-light: #38bdf8;
-            --primary-lighter: #7dd3fc;
-            --primary-pale: rgba(14, 165, 233, 0.15);
-            --primary-dark: #0284c7;
-            
-            /* 状态色 */
-            --success: #22c55e;
-            --success-light: #4ade80;
-            --success-dark: #16a34a;
-            --success-bg: rgba(34, 197, 94, 0.15);
-            
-            --warning: #f59e0b;
-            --warning-light: #fbbf24;
-            --warning-dark: #d97706;
-            --warning-bg: rgba(245, 158, 11, 0.15);
-            
-            --danger: #ef4444;
-            --danger-light: #f87171;
-            --danger-dark: #dc2626;
-            --danger-bg: rgba(239, 68, 68, 0.15);
-            
-            --orange: #f97316;
-            --orange-bg: rgba(249, 115, 22, 0.15);
-            
-            /* 深色背景 */
-            --bg-dark: #0f172a;
-            --bg-dark-2: #1e293b;
-            --bg-dark-3: #334155;
+            /* 苹果官网配色方案 */
+            --apple-bg: #ffffff;
+            --apple-gray-bg: #f5f5f7;
+            --apple-primary: #0071e3;
+            --apple-primary-light: #2997ff;
+            --apple-primary-pale: #e8f4fd;
             
             /* 文字色 */
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
+            --text-dark: #1d1d1f;
+            --text-secondary: #86868b;
+            --text-light: #6e6e73;
+            
+            /* 状态色 - iOS风格 */
+            --status-green: #34c759;
+            --status-red: #ff3b30;
+            --status-orange: #ff9500;
+            --status-yellow: #ffcc00;
             
             /* 边框 */
-            --border: rgba(148, 163, 184, 0.2);
-            --border-light: rgba(148, 163, 184, 0.1);
+            --border-light: #d2d2d7;
+            --border-ultra-light: #e5e5e5;
             
-            /* 阴影 */
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            /* 阴影 - 极轻 */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
             
+            /* 圆角 */
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
-            --radius-xl: 24px;
+            --radius-xl: 20px;
         }
 
         * {
@@ -73,306 +56,200 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-2) 50%, var(--bg-dark) 100%);
-            background-attachment: fixed;
-            color: var(--text-primary);
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: var(--apple-gray-bg);
+            color: var(--text-dark);
             min-height: 100vh;
             line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(ellipse 800px 600px at 15% 25%, rgba(14, 165, 233, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 600px 500px at 85% 75%, rgba(34, 197, 94, 0.05) 0%, transparent 60%),
-                radial-gradient(ellipse 500px 400px at 70% 15%, rgba(168, 85, 247, 0.04) 0%, transparent 60%);
-            animation: liquidBg 25s ease-in-out infinite alternate;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes liquidBg {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(1.5%, -0.8%) rotate(0.5deg); }
-            66% { transform: translate(-0.8%, 1.5%) rotate(-0.3deg); }
-            100% { transform: translate(0.8%, -1%) rotate(0.3deg); }
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
-            position: relative;
-            z-index: 1;
-        }
-
-        .container {
-            max-width: 1600px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 48px 24px;
         }
 
-        /* Header */
+        /* Header - 苹果风格大标题 */
         .header {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(30, 41, 59, 0.65) 100%);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-xl);
-            padding: 24px 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            text-align: center;
+            margin-bottom: 48px;
         }
 
         .header h1 {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-icon {
-            font-size: 2.2rem;
-            filter: drop-shadow(0 4px 12px rgba(14, 165, 233, 0.4));
-        }
-
-        .header .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .copyright {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            text-align: right;
-        }
-
-        .copyright strong {
-            color: var(--danger-light);
-        }
-
-        /* Card */
-        .card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            padding: 28px;
-            margin-bottom: 24px;
-        }
-
-        /* Upload Zone - 优化版 */
-        .upload-zone {
-            border: 2px dashed var(--primary);
-            border-radius: var(--radius-xl);
-            padding: 80px 60px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(56, 189, 248, 0.03) 100%);
-            position: relative;
-            overflow: hidden;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .upload-zone::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.1) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            pointer-events: none;
-        }
-
-        .upload-zone:hover::before, .upload-zone.dragover::before {
-            opacity: 1;
-        }
-
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--primary-light);
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(56, 189, 248, 0.08) 100%);
-            box-shadow: 0 0 40px rgba(14, 165, 233, 0.25), 0 8px 32px rgba(0, 0, 0, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .upload-icon {
-            font-size: 4.5rem;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 12px rgba(14, 165, 233, 0.3));
-        }
-
-        .upload-text {
-            font-size: 1rem;
-            color: var(--text-primary);
-            font-weight: 500;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: -0.02em;
             margin-bottom: 8px;
         }
 
+        .header .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Card - 苹果风格卡片 */
+        .card {
+            background: var(--apple-bg);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+
+        /* Upload Zone - 简洁优雅 */
+        .upload-zone {
+            border: 2px dashed var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 64px 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--apple-bg);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--apple-primary);
+            background: var(--apple-primary-pale);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1.125rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
         .upload-hint {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
 
         .upload-input {
             display: none;
         }
 
-        /* Date Controls */
+        /* Date Controls - 简洁风格 */
         .date-controls {
             display: flex;
             align-items: center;
             gap: 16px;
-            margin-top: 20px;
-            padding: 16px;
-            background: rgba(14, 165, 233, 0.1);
+            margin-top: 24px;
+            padding: 20px 24px;
+            background: var(--apple-gray-bg);
             border-radius: var(--radius-md);
-            border: 1px solid rgba(14, 165, 233, 0.2);
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .date-controls label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
             font-weight: 500;
-        }
-
-        .date-controls input[type="date"] {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 12px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            font-family: inherit;
-        }
-
-        .date-controls input[type="date"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
-        }
-
-        .date-controls .info {
-            color: var(--primary-light);
-            font-size: 0.85rem;
-            padding-left: 8px;
-            border-left: 2px solid var(--primary);
-            margin-left: 4px;
-        }
-
-        .date-controls label {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        /* Stats Cards */
+        .date-controls input[type="date"] {
+            background: var(--apple-bg);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .date-controls input[type="date"]:focus {
+            outline: none;
+            border-color: var(--apple-primary);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+        }
+
+        .date-controls .info {
+            color: var(--apple-primary);
+            font-size: 0.875rem;
+            padding-left: 8px;
+            border-left: 2px solid var(--apple-primary);
+            margin-left: 4px;
+        }
+
+        /* Stats Grid - 苹果风格统计卡片 */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }
 
         .stat-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--apple-bg);
             border-radius: var(--radius-lg);
-            padding: 22px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-lighter) 100%);
-            opacity: 0.8;
+            padding: 24px 20px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .stat-card:hover {
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(14, 165, 233, 0.15);
-            border-color: rgba(14, 165, 233, 0.3);
-            transform: translateY(-4px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .stat-card .stat-label {
             font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             font-weight: 500;
+            margin-bottom: 8px;
         }
 
         .stat-card .stat-value {
             font-size: 1.75rem;
-            font-weight: 800;
-            color: var(--text-primary);
+            font-weight: 600;
+            color: var(--text-dark);
             letter-spacing: -0.5px;
             line-height: 1.2;
         }
 
-        .stat-card .stat-value.primary { color: var(--primary-light); }
-        .stat-card .stat-value.success { color: var(--success); }
-        .stat-card .stat-value.danger { color: var(--danger); }
-        .stat-card .stat-value.warning { color: var(--warning); }
+        .stat-card .stat-value.primary { color: var(--apple-primary); }
+        .stat-card .stat-value.success { color: var(--status-green); }
+        .stat-card .stat-value.danger { color: var(--status-red); }
+        .stat-card .stat-value.warning { color: var(--status-orange); }
 
         .stat-card .stat-sub {
             font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
+            color: var(--text-secondary);
+            margin-top: 6px;
         }
 
-        /* Tabs */
+        /* Tabs - 苹果风格胶囊Tab */
         .tabs-container {
-            margin-top: 24px;
+            margin-top: 32px;
         }
 
         .tabs-nav {
             display: flex;
-            gap: 6px;
-            padding: 6px;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
+            gap: 4px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.04);
             border-radius: var(--radius-lg);
             overflow-x: auto;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 24px;
             flex-wrap: nowrap;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .tabs-nav::-webkit-scrollbar {
@@ -384,21 +261,17 @@
         }
 
         .tabs-nav::-webkit-scrollbar-thumb {
-            background: rgba(14, 165, 233, 0.4);
+            background: var(--border-light);
             border-radius: 2px;
         }
 
         .tab-btn {
-            padding: 12px 20px;
+            padding: 10px 18px;
             background: transparent;
             border: none;
             border-radius: var(--radius-md);
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            font-size: 0.9rem;
-        }
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.875rem;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
@@ -407,14 +280,14 @@
         }
 
         .tab-btn:hover {
-            background: rgba(14, 165, 233, 0.2);
-            color: var(--primary-light);
+            color: var(--text-dark);
+            background: rgba(255, 255, 255, 0.6);
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+            background: var(--apple-bg);
+            color: var(--apple-primary);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
         }
 
         .tab-content {
@@ -427,21 +300,21 @@
 
         /* Section Title */
         .section-title {
-            font-size: 1rem;
+            font-size: 1.125rem;
             font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-ultra-light);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* Table */
+        /* Table - 苹果风格简洁表格 */
         .table-wrapper {
             overflow-x: auto;
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-ultra-light);
             border-radius: var(--radius-md);
             margin-bottom: 20px;
         }
@@ -449,29 +322,33 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
-            background: rgba(15, 23, 42, 0.5);
+            font-size: 0.875rem;
+            background: var(--apple-bg);
         }
 
         th, td {
-            padding: 12px 14px;
+            padding: 14px 16px;
             text-align: left;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-ultra-light);
         }
 
         th {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: var(--apple-primary);
             color: white;
             font-weight: 600;
             white-space: nowrap;
         }
 
         tr:nth-child(even) td {
-            background: rgba(30, 41, 59, 0.3);
+            background: #fafafa;
         }
 
         tr:hover td {
-            background: rgba(14, 165, 233, 0.1);
+            background: var(--apple-primary-pale);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         td.number {
@@ -480,97 +357,95 @@
         }
 
         td.negative {
-            color: var(--danger-light);
+            color: var(--status-red);
             font-weight: 600;
         }
 
         td.positive {
-            color: var(--success);
+            color: var(--status-green);
         }
 
         td.danger {
-            color: var(--danger-light);
+            color: var(--status-red);
             font-weight: 600;
         }
 
         td.warning {
-            color: var(--warning-light);
+            color: var(--status-orange);
             font-weight: 600;
         }
 
         td.success {
-            color: var(--success);
+            color: var(--status-green);
             font-weight: 600;
         }
 
         tr.urgent td {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(255, 59, 48, 0.08);
         }
 
         tr.normal td {
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(52, 199, 89, 0.08);
         }
 
         /* Summary Row */
         .summary-row td {
-            background: rgba(14, 165, 233, 0.2) !important;
+            background: var(--apple-primary-pale) !important;
             font-weight: 600;
-            border-top: 2px solid var(--primary);
+            border-top: 2px solid var(--apple-primary);
         }
 
-        /* Age Group */
+        /* Age Group - 简洁风格 */
         .age-group {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .age-group-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 18px;
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
+            padding: 16px 20px;
+            background: var(--apple-bg);
             border-radius: var(--radius-md);
             margin-bottom: 12px;
-            border: 1px solid var(--border);
+            border-left: 4px solid var(--border-light);
         }
 
         .age-group-header.normal {
-            border-left: 4px solid var(--success);
+            border-left-color: var(--status-green);
         }
 
         .age-group-header.warning {
-            border-left: 4px solid var(--warning);
+            border-left-color: var(--status-orange);
         }
 
         .age-group-header.danger {
-            border-left: 4px solid var(--danger);
+            border-left-color: var(--status-red);
         }
 
         .age-group-title {
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--text-dark);
         }
 
         .age-group-stats {
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.875rem;
         }
 
-        /* Chart */
+        /* Bar Chart - 简洁风格 */
         .chart-container {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
+            background: var(--apple-bg);
+            border: 1px solid var(--border-ultra-light);
             border-radius: var(--radius-md);
-            padding: 20px;
+            padding: 24px;
             margin-bottom: 24px;
         }
 
         .bar-chart {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
 
         .bar-item {
@@ -580,9 +455,9 @@
         }
 
         .bar-label {
-            width: 110px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            width: 100px;
+            font-size: 0.875rem;
+            color: var(--text-dark);
             flex-shrink: 0;
             font-weight: 500;
         }
@@ -590,7 +465,7 @@
         .bar-track {
             flex: 1;
             height: 28px;
-            background: rgba(15, 23, 42, 0.5);
+            background: #f0f0f0;
             border-radius: 6px;
             overflow: hidden;
         }
@@ -608,64 +483,64 @@
             transition: width 0.5s ease;
         }
 
-        .bar-fill.normal { background: linear-gradient(90deg, var(--success-dark), var(--success)); }
-        .bar-fill.warning { background: linear-gradient(90deg, var(--warning-dark), var(--warning)); }
-        .bar-fill.danger { background: linear-gradient(90deg, var(--danger-dark), var(--danger)); }
+        .bar-fill.normal { background: var(--status-green); }
+        .bar-fill.warning { background: var(--status-orange); }
+        .bar-fill.danger { background: var(--status-red); }
 
         .bar-value {
             width: 180px;
             text-align: right;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
             flex-shrink: 0;
         }
 
-        /* Search */
+        /* Search Box */
         .search-box {
             margin-bottom: 16px;
         }
 
         .search-box input {
             width: 100%;
-            max-width: 350px;
-            padding: 10px 14px;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border);
+            max-width: 320px;
+            padding: 12px 16px;
+            background: var(--apple-bg);
+            border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
             font-family: inherit;
         }
 
         .search-box input::placeholder {
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+            border-color: var(--apple-primary);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
         }
 
-        /* Export Buttons */
+        /* Export Buttons - 苹果风格按钮 */
         .export-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 24px;
+            margin-top: 32px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .export-buttons .btn {
-            min-width: 140px;
+            min-width: 150px;
             justify-content: center;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             border-radius: var(--radius-md);
-            font-size: 0.9rem;
+            font-size: 0.9375rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -676,30 +551,32 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: var(--apple-primary);
             color: white;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
 
         .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
-            transform: translateY(-1px);
+            background: var(--apple-primary-light);
         }
 
         .btn-secondary {
-            background: rgba(30, 41, 59, 0.8);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
+            background: var(--apple-bg);
+            color: var(--apple-primary);
+            border: 1px solid var(--apple-primary);
         }
 
-.btn-accent {
-            background: rgba(30, 41, 59, 0.8);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-        }
         .btn-secondary:hover {
-            background: rgba(30, 41, 59, 1);
-            border-color: var(--primary);
+            background: var(--apple-primary-pale);
+        }
+
+        .btn-accent {
+            background: var(--apple-bg);
+            color: var(--text-dark);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-accent:hover {
+            background: var(--apple-gray-bg);
         }
 
         .btn:disabled {
@@ -710,55 +587,54 @@
         /* Attention Cards */
         .attention-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
         }
 
         .attention-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
+            background: var(--apple-bg);
+            border: 1px solid var(--border-ultra-light);
             border-radius: var(--radius-md);
-            padding: 16px;
+            padding: 20px;
         }
 
         .attention-card.danger {
-            border-color: rgba(239, 68, 68, 0.5);
-            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(255, 59, 48, 0.3);
+            background: rgba(255, 59, 48, 0.04);
         }
 
         .attention-card.warning {
-            border-color: rgba(245, 158, 11, 0.5);
-            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(255, 149, 0, 0.3);
+            background: rgba(255, 149, 0, 0.04);
         }
 
         .attention-label {
             font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 4px;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
 
         .attention-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
         }
 
         /* Employee Header */
         .employee-header {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.05) 100%);
+            background: var(--apple-primary-pale);
             border-radius: var(--radius-lg);
             padding: 24px;
             margin-bottom: 24px;
-            border: 1px solid rgba(14, 165, 233, 0.3);
+            border: 1px solid rgba(0, 113, 227, 0.15);
         }
 
         .employee-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary-light);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--apple-primary);
             margin-bottom: 12px;
         }
 
@@ -766,8 +642,8 @@
             display: flex;
             gap: 24px;
             flex-wrap: wrap;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
         }
 
         .employee-meta span {
@@ -781,6 +657,28 @@
             display: none !important;
         }
 
+        /* Footer - 苹果风格 */
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            background: var(--apple-bg);
+            border-top: 1px solid var(--border-ultra-light);
+            margin-top: 48px;
+        }
+
+        .footer .footer-line1 {
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            line-height: 1.8;
+        }
+
+        .footer .footer-line2 {
+            color: var(--text-light);
+            font-size: 0.75rem;
+            opacity: 0.8;
+            line-height: 1.8;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -788,47 +686,65 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
+            background: #f1f1f1;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--bg-dark-3);
+            background: #c1c1c6;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
+            background: #a1a1a6;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .container {
-                padding: 16px;
-            }
-
-            .header {
-                padding: 20px;
+                padding: 24px 16px;
             }
 
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 1.75rem;
+            }
+
+            .header .subtitle {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 24px;
             }
 
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .card {
-                padding: 16px;
-            }
-
-            .tabs-nav {
-                padding-bottom: 8px;
+            .stat-card .stat-value {
+                font-size: 1.5rem;
             }
 
             .tab-btn {
                 padding: 8px 12px;
-                font-size: 0.8rem;
+                font-size: 0.8125rem;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+
+            .export-buttons .btn {
+                width: 100%;
+            }
+
+            .bar-label {
+                width: 80px;
+                font-size: 0.8125rem;
+            }
+
+            .bar-value {
+                width: 140px;
+                font-size: 0.75rem;
             }
         }
 
@@ -849,17 +765,12 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <div class="header-icon">📊</div>
-            <div class="header-content">
-                <div>
-                    <h1>✅ 应收账款分析工具</h1>
-                    <p class="subtitle">智能分析销售出库单数据 · 账龄预警 · 业务员汇总</p>
-                </div>
-            </div>
+            <h1>✅ 应收账款分析工具</h1>
+            <p class="subtitle">智能分析销售出库单数据 · 账龄预警 · 业务员汇总</p>
         </header>
 
         <!-- Upload Section -->
-        <div id="uploadSection" class="card" style="position:relative;overflow:hidden;">
+        <div id="uploadSection" class="card">
             <div class="upload-zone" id="uploadZone">
                 <input type="file" id="fileInput" class="upload-input" accept=".xlsx,.xls,.csv">
                 <div>
@@ -902,10 +813,10 @@
         </div>
     </div>
 
-    <!-- 页脚 -->
+    <!-- Footer -->
     <footer class="footer">
-        <div>© 2026 应收账款分析工具 · 开发者：张洪杰</div>
-        <div style="margin-top:5px;font-size:11px;opacity:0.8;">版权所有 · 未经授权禁止复制、传播或商业使用 · 侵权必究</div>
+        <div class="footer-line1">© 2026 应收账款分析工具 · 开发者：张洪杰</div>
+        <div class="footer-line2">版权所有 · 未经授权禁止复制、传播或商业使用 · 侵权必究</div>
     </footer>
 
     <script>
@@ -1548,7 +1459,7 @@
                         <div class="attention-card">
                             <div class="attention-label">TOP10客户金额</div>
                             <div class="attention-value">${formatCurrency(stats.top10Amount)}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">占比 ${stats.top10Percent.toFixed(1)}%</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">占比 ${stats.top10Percent.toFixed(1)}%</div>
                         </div>
                         <div class="attention-card danger">
                             <div class="attention-label">91天以上应收</div>
@@ -1878,7 +1789,7 @@
             }
 
             html += `
-                    <div style="background: rgba(14, 165, 233, 0.2); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; border: 1px solid rgba(14, 165, 233, 0.3);">
+                    <div style="background: var(--apple-primary-pale); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; border: 1px solid rgba(0, 113, 227, 0.15);">
                         <strong>📊 总计</strong>：未结算 ${formatCurrency(totalUnsettled)} | 
                         正常 ${formatCurrency(normalAmount)} | 
                         紧急 ${formatCurrency(urgentAmount)} (${urgentPercent.toFixed(1)}%)
@@ -2507,12 +2418,12 @@
             const tabContent = document.getElementById('tabContents');
             if (!tabContent) { alert('请先上传数据'); return; }
             
-            const activeTab = document.querySelector('.tab-btn.active');
-            const tabName = activeTab ? activeTab.textContent.trim() : '分析';
+            const activeTabEl = document.querySelector('.tab-btn.active');
+            const tabName = activeTabEl ? activeTabEl.textContent.trim() : '分析';
             
             try {
                 const canvas = await html2canvas(tabContent, {
-                    backgroundColor: '#0f172a',
+                    backgroundColor: '#ffffff',
                     scale: 2,
                     useCORS: true,
                     logging: false
