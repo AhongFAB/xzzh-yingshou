@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         :root {
@@ -1315,38 +1314,6 @@ header::before, .
     color: #64748b;
 }
 
-/* ========== Print Styles (PDF Export) ========== */
-@media print {
-    body {
-        background: #fff !important;
-        color: #000 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    body::before, body::after { display: none !important; }
-    .header { background: #f0f4ff !important; border: 1px solid #ccc !important; color: #000 !important; box-shadow: none !important; }
-    .header h1 { color: #1a1a2e !important; }
-    .subtitle { color: #666 !important; }
-    .upload-section, #uploadSection, #restoreBanner, .export-buttons, .footer, .back-to-portal, #mappingModal { display: none !important; }
-    .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-    .card, .tabs-container, .stats-grid, .stat-card, .summary-detail-card, .age-group-header {
-        background: #fff !important; border: 1px solid #ddd !important; box-shadow: none !important;
-        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-    }
-    .stat-card::before { display: none !important; }
-    .stat-value, .stat-label, .stat-sub { color: #000 !important; }
-    th { background: #e8ecf4 !important; color: #1a1a2e !important; }
-    td, th { color: #1a1a2e !important; border-color: #ddd !important; }
-    .amount, .number { color: #1a1a2e !important; }
-    table { page-break-inside: auto; }
-    tr { page-break-inside: avoid; }
-    .tabs-nav { display: none !important; }
-    .tab-content { display: block !important; padding: 10px !important; page-break-after: always; }
-    .tab-content:last-child { page-break-after: auto; }
-    .tab-content.active { display: block !important; }
-    canvas { max-width: 100% !important; }
-}
-
     </style>
 </head>
 <body>
@@ -1356,19 +1323,6 @@ header::before, .
             <h1>✅ 应收账款分析工具</h1>
             <p class="subtitle">智能分析销售出库单数据 · 账龄预警 · 业务员汇总</p>
         </header>
-
-        <!-- Restore Banner -->
-        <div id="restoreBanner" style="background:linear-gradient(135deg,rgba(79,172,254,0.15),rgba(67,233,123,0.1));border:1px solid rgba(79,172,254,0.3);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none;align-items:center;justify-content:space-between;gap:12px;">
-            <div>
-                <span style="font-size:16px;">💾</span>
-                <span style="color:#4facfe;font-weight:600;">发现上次分析缓存</span>
-                <span style="color:#94a3b8;font-size:13px;margin-left:8px;" id="cacheInfo"></span>
-            </div>
-            <div style="display:flex;gap:8px;">
-                <button class="btn btn-primary" id="restoreCacheBtn" style="padding:8px 18px;font-size:13px;">恢复</button>
-                <button class="btn btn-secondary" id="dismissCacheBtn" style="padding:8px 18px;font-size:13px;">忽略</button>
-            </div>
-        </div>
 
         <!-- Upload Section -->
         <div id="uploadSection" class="card">
@@ -1406,12 +1360,6 @@ header::before, .
                 </button>
                 <button class="btn btn-secondary" id="exportAllBtn">
                     📥 导出全部(18个Sheet)
-                </button>
-                <button class="btn btn-accent" id="screenshotCurrentBtn">
-                    📸 截图当前页
-                </button>
-                <button class="btn btn-accent" id="printPdfBtn" style="background:linear-gradient(135deg,#4facfe,#00f2fe);box-shadow:0 4px 15px rgba(79,172,254,0.25);">
-                    🖨️ 打印PDF
                 </button>
             </div>
         </div>
@@ -1880,7 +1828,6 @@ header::before, .
             renderStatsCards(stats);
             buildTabs();
             renderAllTabs();
-            setTimeout(() => saveCache(), 100);
         }
 
         function renderStatsCards(stats) {
@@ -3036,17 +2983,6 @@ header::before, .
 
         // ==================== Event Handlers ====================
         document.addEventListener('DOMContentLoaded', function() {
-            // Check for cached analysis
-            const cache = checkCache();
-            if (cache) {
-                const banner = document.getElementById('restoreBanner');
-                banner.style.display = 'flex';
-                document.getElementById('cacheInfo').textContent = 
-                    `分析时间：${cache.dateLabel} ｜ 记录数：${cache.parsedData.length}`;
-                document.getElementById('restoreCacheBtn').addEventListener('click', restoreFromCache);
-                document.getElementById('dismissCacheBtn').addEventListener('click', dismissCache);
-            }
-
             const uploadZone = document.getElementById('uploadZone');
             const fileInput = document.getElementById('fileInput');
             const cutoffDateInput = document.getElementById('cutoffDate');
@@ -3096,8 +3032,6 @@ header::before, .
 
             document.getElementById('exportCurrentBtn').addEventListener('click', exportCurrentTab);
             document.getElementById('exportAllBtn').addEventListener('click', exportAllTabs);
-            document.getElementById('screenshotCurrentBtn').addEventListener('click', screenshotCurrentTab);
-            document.getElementById('printPdfBtn').addEventListener('click', printPDF);
 
             const today = new Date();
             cutoffDateInput.value = today.toISOString().split('T')[0];
@@ -3109,89 +3043,6 @@ header::before, .
                     console.log('SW registration failed:', err);
                 });
             });
-        }
-
-        // ==================== Print PDF Function ====================
-        function printPDF() {
-            const allContents = document.querySelectorAll('.tab-content');
-            const wasActive = [];
-            allContents.forEach(c => {
-                wasActive.push(c.classList.contains('active'));
-                c.classList.add('active');
-            });
-            
-            window.print();
-            
-            allContents.forEach((c, i) => {
-                if (!wasActive[i]) c.classList.remove('active');
-            });
-        }
-
-        // ==================== Cache (localStorage) ====================
-        const CACHE_KEY = 'ar_tool_v2';
-        const CACHE_VERSION = 2;
-
-        function saveCache() {
-            try {
-                const cache = {
-                    version: CACHE_VERSION,
-                    timestamp: Date.now(),
-                    dateLabel: new Date().toLocaleString('zh-CN'),
-                    cutoffDate: cutoffDate ? cutoffDate.toISOString() : null,
-                    parsedData: parsedData.map(r => ({
-                        ...r,
-                        docDate: r.docDate ? r.docDate.toISOString() : null,
-                        ageGroup: r.ageGroup
-                    }))
-                };
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-            } catch (e) {
-                console.warn('Cache save failed:', e.message);
-            }
-        }
-
-        function checkCache() {
-            try {
-                const raw = localStorage.getItem(CACHE_KEY);
-                if (!raw) return null;
-                const cache = JSON.parse(raw);
-                if (cache.version !== CACHE_VERSION) return null;
-                if (Date.now() - cache.timestamp > 7 * 24 * 60 * 60 * 1000) {
-                    localStorage.removeItem(CACHE_KEY);
-                    return null;
-                }
-                return cache;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function restoreFromCache() {
-            const cache = checkCache();
-            if (!cache) return;
-            
-            parsedData = cache.parsedData.map(r => ({
-                ...r,
-                docDate: r.docDate ? new Date(r.docDate) : null,
-                ageGroup: r.ageGroup
-            }));
-            
-            if (cache.cutoffDate) {
-                cutoffDate = new Date(cache.cutoffDate);
-                document.getElementById('cutoffDate').value = cutoffDate.toISOString().split('T')[0];
-                document.getElementById('dateInfo').textContent = `✓ 已恢复缓存：${cutoffDate.toLocaleDateString()}`;
-            }
-            
-            groupBySalesperson();
-            document.getElementById('uploadSection').classList.add('hidden');
-            document.getElementById('analysisSection').classList.remove('hidden');
-            document.getElementById('restoreBanner').style.display = 'none';
-            renderAnalysis();
-        }
-
-        function dismissCache() {
-            localStorage.removeItem(CACHE_KEY);
-            document.getElementById('restoreBanner').style.display = 'none';
         }
 
         // ==================== Screenshot Function ====================
