@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ar-receivable-v1';
+const CACHE_NAME = 'ar-receivable-v2';
 const urlsToCache = [
   '/ar-receivable-tool/',
   '/ar-receivable-tool/index.html',
