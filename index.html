@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="应收账款分析工具 - 智能分析销售出库单数据">
+    <meta name="theme-color" content="#3b82f6">
+    <title>应收账款分析工具</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-lighter: #60a5fa;
+            --primary-pale: #eff6ff;
+            --success: #059669;
+            --success-light: #10b981;
+            --success-pale: #ecfdf5;
+            --warning: #d97706;
+            --warning-light: #f59e0b;
+            --warning-pale: #fffbeb;
+            --danger: #dc2626;
+            --danger-light: #ef4444;
+            --danger-pale: #fef2f2;
+            --bg-page: #f1f5f9;
+            --bg-white: #ffffff;
+            --bg-gray: #f8fafc;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            padding: 24px 32px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-align: right;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--primary-lighter);
+            border-radius: var(--radius-lg);
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--primary-pale);
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: #dbeafe;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        /* Date Controls */
+        .date-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+            padding: 16px;
+            background: var(--primary-pale);
+            border-radius: var(--radius-md);
+            flex-wrap: wrap;
+        }
+
+        .date-controls label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .date-controls input[type="date"] {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .date-controls .info {
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-white);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-card .stat-value.primary { color: var(--primary); }
+        .stat-card .stat-value.success { color: var(--success); }
+        .stat-card .stat-value.danger { color: var(--danger); }
+        .stat-card .stat-value.warning { color: var(--warning); }
+
+        .stat-card .stat-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            margin-top: 24px;
+        }
+
+        .tabs-nav {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: var(--bg-white);
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-wrap: nowrap;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover {
+            background: var(--primary-pale);
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-lighter);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            background: var(--bg-white);
+        }
+
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tr:nth-child(even) td {
+            background: var(--bg-gray);
+        }
+
+        tr:hover td {
+            background: var(--primary-pale);
+        }
+
+        td.number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        td.negative {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        td.positive {
+            color: var(--success);
+        }
+
+        td.danger {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        td.warning {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        td.success {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        tr.urgent td {
+            background: var(--danger-pale);
+        }
+
+        tr.normal td {
+            background: var(--success-pale);
+        }
+
+        /* Summary Row */
+        .summary-row td {
+            background: var(--primary-pale) !important;
+            font-weight: 600;
+            border-top: 2px solid var(--primary);
+        }
+
+        /* Age Group */
+        .age-group {
+            margin-bottom: 24px;
+        }
+
+        .age-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: var(--bg-white);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .age-group-header.normal {
+            border-left: 4px solid var(--success);
+        }
+
+        .age-group-header.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .age-group-header.danger {
+            border-left: 4px solid var(--danger);
+        }
+
+        .age-group-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .age-group-stats {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Chart */
+        .chart-container {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bar-label {
+            width: 110px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 28px;
+            background: var(--bg-gray);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            min-width: fit-content;
+            transition: width 0.5s ease;
+        }
+
+        .bar-fill.normal { background: linear-gradient(90deg, var(--success), var(--success-light)); }
+        .bar-fill.warning { background: linear-gradient(90deg, var(--warning), var(--warning-light)); }
+        .bar-fill.danger { background: linear-gradient(90deg, var(--danger), var(--danger-light)); }
+
+        .bar-value {
+            width: 180px;
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* Search */
+        .search-box {
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 350px;
+            padding: 10px 14px;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Export Buttons */
+        .export-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-gray);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Attention Cards */
+        .attention-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .attention-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .attention-card.danger {
+            border-color: var(--danger-light);
+            background: var(--danger-pale);
+        }
+
+        .attention-card.warning {
+            border-color: var(--warning-light);
+            background: var(--warning-pale);
+        }
+
+        .attention-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .attention-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Employee Header */
+        .employee-header {
+            background: linear-gradient(135deg, var(--primary-pale) 0%, #dbeafe 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--primary-lighter);
+        }
+
+        .employee-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .employee-meta {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .employee-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .tabs-nav {
+                padding-bottom: 8px;
+            }
+
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .card, .header {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div>
+                    <h1>📊 应收账款分析工具</h1>
+                    <p class="subtitle">智能分析销售出库单数据 | 账龄预警 | 业务员汇总</p>
+                </div>
+                <div class="copyright">
+                    <p>开发者：张洪杰</p>
+                    <p style="color: var(--danger); font-weight: 600;">侵权必究</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="card">
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" class="upload-input" accept=".xlsx,.xls,.csv">
+                <div>
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">点击或拖拽上传销售出库单清单</p>
+                    <p class="upload-hint">支持 .xlsx、.xls、.csv 格式</p>
+                </div>
+            </div>
+
+            <div class="date-controls">
+                <label>截止日期：</label>
+                <input type="date" id="cutoffDate" value="">
+                <span class="info" id="dateInfo">📋 从文件自动解析</span>
+            </div>
+        </div>
+
+        <!-- Analysis Results -->
+        <div id="analysisSection" class="hidden">
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsCards"></div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <nav class="tabs-nav" id="tabsNav"></nav>
+                <div id="tabContents"></div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="export-buttons">
+                <button class="btn btn-primary" id="exportCurrentBtn">
+                    📥 导出当前页
+                </button>
+                <button class="btn btn-secondary" id="exportAllBtn">
+                    📥 导出全部(18个Sheet)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== Global State ====================
+        let rawData = [];
+        let parsedData = [];
+        let cutoffDate = null;
+        let employeeData = {};
+        let activeTab = 0;
+
+        // Column mapping configuration
+        const columnMapping = {
+            sequence: ['序号', 'NO', '编号', '#'],
+            print: ['打印'],
+            firstReview: ['一审'],
+            invoiceType: ['票据类型', '发票类型'],
+            lineCount: ['行数'],
+            docDate: ['单据日期', '日期', '开单日期', '出库日期'],
+            select: ['选择'],
+            docNo: ['单据号码', '单号', '单据编号'],
+            orderNo: ['销售订单号', '订单号'],
+            customer: ['客户', '客户名称', '客户名', '购货单位'],
+            salesAmount: ['销售金额', '金额', '出库金额', '价税合计'],
+            settled: ['已结算', '已收款', '结算金额'],
+            unsettled: ['未结算', '未收款', '应收金额'],
+            paymentAccount: ['收款帐户', '收款账户', '账户'],
+            salesperson: ['业务员', '销售员', '经手人', '销售负责人'],
+            remark: ['单据备注', '备注', '摘要'],
+            createTime: ['制单时间', '创建时间'],
+            creator: ['制单人', '创建人'],
+            feeSummary: ['费用摘要'],
+            feeAmount: ['费用金额']
+        };
+
+        // ==================== Utility Functions ====================
+        function formatNumber(num, decimals = 2) {
+            if (num === null || num === undefined || isNaN(num)) return '-';
+            return Number(num).toLocaleString('zh-CN', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        function formatCurrency(num) {
+            return formatNumber(num);
+        }
+
+        function parseDate(str) {
+            if (!str) return null;
+            if (str instanceof Date) return str;
+            
+            const formats = [
+                /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/,
+                /^(\d{4})(\d{2})(\d{2})$/,
+                /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/
+            ];
+
+            for (const fmt of formats) {
+                const match = String(str).match(fmt);
+                if (match) {
+                    let year, month, day;
+                    if (match[1].length === 4) {
+                        year = parseInt(match[1]);
+                        month = parseInt(match[2]);
+                        day = parseInt(match[3]);
+                    } else {
+                        year = parseInt(match[3]);
+                        month = parseInt(match[1]);
+                        day = parseInt(match[2]);
+                    }
+                    const date = new Date(year, month - 1, day);
+                    if (!isNaN(date.getTime())) return date;
+                }
+            }
+
+            const date = new Date(str);
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        function daysBetween(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            return Math.round((date2 - date1) / oneDay);
+        }
+
+        function getAgeGroup(days) {
+            if (days <= 30) return { name: '0-30天(正常)', level: 'normal', order: 1 };
+            if (days <= 90) return { name: '31-90天(紧急)', level: 'warning', order: 2 };
+            if (days <= 180) return { name: '91-180天(紧急)', level: 'danger', order: 3 };
+            return { name: '180天以上(紧急)', level: 'danger', order: 4 };
+        }
+
+        function matchColumn(headers, targetColumns) {
+            for (const col of targetColumns) {
+                const idx = headers.findIndex(h => 
+                    String(h).trim().toLowerCase() === col.toLowerCase()
+                );
+                if (idx !== -1) return idx;
+            }
+            return -1;
+        }
+
+        function findColumnIndex(headers, fieldName) {
+            return matchColumn(headers, columnMapping[fieldName] || [fieldName]);
+        }
+
+        // ==================== File Parsing ====================
+        function parseFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                    if (jsonData.length < 3) {
+                        alert('文件数据行数不足');
+                        return;
+                    }
+
+                    rawData = jsonData;
+                    parseHeadersAndData();
+                } catch (err) {
+                    console.error('Parse error:', err);
+                    alert('文件解析失败: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseHeadersAndData() {
+            const headers = rawData[0].map(h => String(h).trim());
+            
+            const colIndices = {
+                docDate: findColumnIndex(headers, 'docDate'),
+                docNo: findColumnIndex(headers, 'docNo'),
+                customer: findColumnIndex(headers, 'customer'),
+                salesAmount: findColumnIndex(headers, 'salesAmount'),
+                settled: findColumnIndex(headers, 'settled'),
+                unsettled: findColumnIndex(headers, 'unsettled'),
+                salesperson: findColumnIndex(headers, 'salesperson'),
+                remark: findColumnIndex(headers, 'remark')
+            };
+
+            // Parse cutoff date from row 2
+            const row2 = rawData[1];
+            if (row2 && row2.length > 0) {
+                const row2Text = String(row2).join(' ');
+                const dateMatch = row2Text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g);
+                if (dateMatch && dateMatch.length >= 2) {
+                    const endDate = dateMatch[dateMatch.length - 1];
+                    cutoffDate = parseDate(endDate);
+                    if (cutoffDate) {
+                        document.getElementById('cutoffDate').value = cutoffDate.toISOString().split('T')[0];
+                        document.getElementById('dateInfo').textContent = `✓ 已从文件解析：${cutoffDate.toLocaleDateString()}`;
+                    }
+                }
+            }
+
+            // Parse data rows
+            parsedData = [];
+            for (let i = 2; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!row || row.length === 0) continue;
+
+                const getVal = (idx) => {
+                    if (idx < 0 || idx >= row.length) return '';
+                    let val = row[idx];
+                    if (typeof val === 'string') {
+                        val = val.trim();
+                        val = val.replace(/[￥¥,，]/g, '').trim();
+                    }
+                    return val;
+                };
+
+                const docDateStr = getVal(colIndices.docDate);
+                const salesAmount = parseFloat(getVal(colIndices.salesAmount)) || 0;
+                const settled = parseFloat(getVal(colIndices.settled)) || 0;
+                const unsettled = parseFloat(getVal(colIndices.unsettled)) || 0;
+
+                if (unsettled !== 0) {
+                    const docDate = parseDate(docDateStr);
+                    const age = docDate && cutoffDate ? daysBetween(docDate, cutoffDate) : null;
+                    const ageGroup = age !== null ? getAgeGroup(age) : null;
+
+                    parsedData.push({
+                        docNo: getVal(colIndices.docNo),
+                        docDate: docDate,
+                        docDateStr: docDateStr,
+                        customer: getVal(colIndices.customer) || '未指定',
+                        salesAmount: salesAmount,
+                        settled: settled,
+                        unsettled: unsettled,
+                        salesperson: getVal(colIndices.salesperson) || '未指定',
+                        remark: getVal(colIndices.remark),
+                        age: age,
+                        ageGroup: ageGroup,
+                        isReturn: salesAmount < 0
+                    });
+                }
+            }
+
+            if (parsedData.length === 0) {
+                alert('未找到未结算记录');
+                return;
+            }
+
+            groupBySalesperson();
+            
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('analysisSection').classList.remove('hidden');
+            
+            renderAnalysis();
+        }
+
+        function groupBySalesperson() {
+            employeeData = {};
+            
+            for (const record of parsedData) {
+                const emp = record.salesperson;
+                if (!employeeData[emp]) {
+                    employeeData[emp] = {
+                        name: emp,
+                        customers: {},
+                        records: []
+                    };
+                }
+                employeeData[emp].records.push(record);
+                
+                const cust = record.customer;
+                if (!employeeData[emp].customers[cust]) {
+                    employeeData[emp].customers[cust] = {
+                        name: cust,
+                        unsettled: 0,
+                        records: [],
+                        earliestDate: record.docDate,
+                        latestDate: record.docDate
+                    };
+                }
+                const custData = employeeData[emp].customers[cust];
+                custData.records.push(record);
+                custData.unsettled += record.unsettled;
+                if (record.docDate < custData.earliestDate) custData.earliestDate = record.docDate;
+                if (record.docDate > custData.latestDate) custData.latestDate = record.docDate;
+            }
+        }
+
+        // ==================== Analysis Logic ====================
+        function calculateStats() {
+            const stats = {
+                cutoffDate: cutoffDate,
+                totalCustomers: new Set(parsedData.map(r => r.customer)).size,
+                outboundCount: parsedData.filter(r => !r.isReturn).length,
+                returnCount: parsedData.filter(r => r.isReturn).length,
+                outboundAmount: parsedData.filter(r => !r.isReturn).reduce((s, r) => s + r.unsettled, 0),
+                returnAmount: parsedData.filter(r => r.isReturn).reduce((s, r) => s + r.unsettled, 0),
+                totalUnsettled: parsedData.reduce((s, r) => s + r.unsettled, 0),
+                ageDistribution: {
+                    normal: { count: 0, amount: 0 },
+                    warning: { count: 0, amount: 0 },
+                    danger: { count: 0, amount: 0 }
+                },
+                negativeAmountCustomers: 0,
+                top10Percent: 0,
+                top10Amount: 0,
+                over90DaysAmount: 0,
+                earliestDate: null
+            };
+
+            for (const record of parsedData) {
+                if (record.ageGroup) {
+                    stats.ageDistribution[record.ageGroup.level].count++;
+                    stats.ageDistribution[record.ageGroup.level].amount += record.unsettled;
+                }
+                if (record.unsettled < 0) {
+                    stats.negativeAmountCustomers++;
+                }
+                if (record.age !== null && record.age > 90) {
+                    stats.over90DaysAmount += record.unsettled;
+                }
+                if (!stats.earliestDate || (record.docDate && record.docDate < stats.earliestDate)) {
+                    stats.earliestDate = record.docDate;
+                }
+            }
+
+            const customerTotals = {};
+            for (const record of parsedData) {
+                customerTotals[record.customer] = (customerTotals[record.customer] || 0) + record.unsettled;
+            }
+            const sortedCustomers = Object.entries(customerTotals)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            const top10Total = sortedCustomers.reduce((s, [, v]) => s + v, 0);
+            stats.top10Amount = top10Total;
+            stats.top10Percent = stats.totalUnsettled !== 0 ? (top10Total / stats.totalUnsettled * 100) : 0;
+            stats.over100kCustomers = Object.values(customerTotals).filter(v => v > 100000).length;
+
+            return stats;
+        }
+
+        function getSalespersonStats() {
+            const result = [];
+            
+            for (const [empName, empData] of Object.entries(employeeData)) {
+                let totalUnsettled = 0;
+                let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
+
+                for (const record of empData.records) {
+                    totalUnsettled += record.unsettled;
+                    if (record.ageGroup) {
+                        if (record.ageGroup.level === 'normal') {
+                            normalAmount += record.unsettled;
+                        } else if (record.ageGroup.level === 'warning') {
+                            warningAmount += record.unsettled;
+                        } else {
+                            dangerAmount += record.unsettled;
+                        }
+                    }
+                }
+
+                const urgentAmount = warningAmount + dangerAmount;
+                const over30DaysPercent = totalUnsettled !== 0 ? ((warningAmount + dangerAmount) / totalUnsettled * 100) : 0;
+
+                result.push({
+                    name: empName,
+                    customerCount: Object.keys(empData.customers).length,
+                    totalUnsettled,
+                    normalAmount,
+                    warningAmount,
+                    dangerAmount,
+                    urgentAmount,
+                    over30DaysPercent
+                });
+            }
+
+            return result.sort((a, b) => b.totalUnsettled - a.totalUnsettled);
+        }
+
+        function getCustomerDetails() {
+            const customerTotals = {};
+            
+            for (const record of parsedData) {
+                if (!customerTotals[record.customer]) {
+                    customerTotals[record.customer] = {
+                        name: record.customer,
+                        unsettled: 0,
+                        count: 0,
+                        earliestDate: record.docDate,
+                        latestDate: record.docDate,
+                        salesperson: record.salesperson,
+                        records: []
+                    };
+                }
+                const c = customerTotals[record.customer];
+                c.unsettled += record.unsettled;
+                c.count++;
+                c.records.push(record);
+                if (record.docDate && record.docDate < c.earliestDate) c.earliestDate = record.docDate;
+                if (record.docDate && record.docDate > c.latestDate) c.latestDate = record.docDate;
+            }
+
+            const result = Object.values(customerTotals).map(c => {
+                const ageGroups = { normal: 0, warning: 0, danger: 0 };
+                for (const r of c.records) {
+                    if (r.ageGroup) ageGroups[r.ageGroup.level]++;
+                }
+                let dominantGroup = 'normal';
+                if (ageGroups.danger >= ageGroups.warning && ageGroups.danger > 0) {
+                    dominantGroup = 'danger';
+                } else if (ageGroups.warning > 0) {
+                    dominantGroup = 'warning';
+                }
+                
+                let ageRange = '未知';
+                if (c.earliestDate && cutoffDate) {
+                    const minAge = daysBetween(c.earliestDate, cutoffDate);
+                    const ag = getAgeGroup(minAge);
+                    ageRange = ag.name;
+                }
+
+                return {
+                    name: c.name,
+                    unsettled: c.unsettled,
+                    count: c.count,
+                    ageRange,
+                    ageGroup: dominantGroup,
+                    earliestDate: c.earliestDate,
+                    latestDate: c.latestDate,
+                    salesperson: c.salesperson
+                };
+            });
+
+            return result.sort((a, b) => b.unsettled - a.unsettled);
+        }
+
+        // ==================== Rendering ====================
+        function renderAnalysis() {
+            const stats = calculateStats();
+            renderStatsCards(stats);
+            buildTabs();
+            renderAllTabs();
+        }
+
+        function renderStatsCards(stats) {
+            const container = document.getElementById('statsCards');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">截止日期</div>
+                    <div class="stat-value primary">${stats.cutoffDate ? stats.cutoffDate.toLocaleDateString() : '-'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">客户总数</div>
+                    <div class="stat-value">${stats.totalCustomers}</div>
+                    <div class="stat-sub">有未结算的客户</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">出库单 / 退货单</div>
+                    <div class="stat-value">${stats.outboundCount} / ${stats.returnCount}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">出库金额</div>
+                    <div class="stat-value success">${formatCurrency(stats.outboundAmount)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">退货金额</div>
+                    <div class="stat-value danger">${formatCurrency(stats.returnAmount)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">未结算总金额</div>
+                    <div class="stat-value warning">${formatCurrency(stats.totalUnsettled)}</div>
+                </div>
+            `;
+        }
+
+        function buildTabs() {
+            const nav = document.getElementById('tabsNav');
+            const contents = document.getElementById('tabContents');
+            
+            const baseTabs = [
+                { id: 'summary', name: '汇总统计' },
+                { id: 'salesperson-age', name: '业务员账龄汇总' },
+                { id: 'customer-detail', name: '全部未结算客户明细' },
+                { id: 'by-age', name: '按账龄分类' }
+            ];
+
+            const empNames = Object.keys(employeeData).sort();
+            for (const name of empNames) {
+                baseTabs.push({ id: `emp-${name}`, name: `${name} — 明细` });
+            }
+
+            nav.innerHTML = baseTabs.map((tab, i) => 
+                `<button class="tab-btn ${i === 0 ? 'active' : ''}" data-tab="${i}">${tab.name}</button>`
+            ).join('');
+
+            contents.innerHTML = baseTabs.map((tab, i) => 
+                `<div class="tab-content ${i === 0 ? 'active' : ''}" id="tab-${i}"></div>`
+            ).join('');
+
+            nav.addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-btn')) {
+                    const idx = parseInt(e.target.dataset.tab);
+                    showTab(idx);
+                }
+            });
+
+            window.allTabs = baseTabs;
+        }
+
+        function showTab(idx) {
+            activeTab = idx;
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === idx);
+            });
+            document.querySelectorAll('.tab-content').forEach((content, i) => {
+                content.classList.toggle('active', i === idx);
+            });
+        }
+
+        function renderAllTabs() {
+            renderSummaryTab();
+            renderSalespersonAgeTab();
+            renderCustomerDetailTab();
+            renderByAgeTab();
+            
+            const empNames = Object.keys(employeeData).sort();
+            let tabIdx = 4;
+            for (const name of empNames) {
+                renderEmployeeTab(tabIdx++, name);
+            }
+        }
+
+        function renderSummaryTab() {
+            const stats = calculateStats();
+            const salespersonStats = getSalespersonStats();
+            const total = stats.totalUnsettled || 1;
+
+            const html = `
+                <div class="card">
+                    <h3 class="section-title">📊 账龄分布</h3>
+                    <div class="chart-container">
+                        <div class="bar-chart">
+                            <div class="bar-item">
+                                <div class="bar-label">0-30天(正常)</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill normal" style="width: ${Math.max(stats.ageDistribution.normal.count / Math.max(stats.outboundCount, 1) * 100, 5)}%">
+                                        ${stats.ageDistribution.normal.count}单
+                                    </div>
+                                </div>
+                                <div class="bar-value">
+                                    ${formatCurrency(stats.ageDistribution.normal.amount)} | ${(stats.ageDistribution.normal.amount / total * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">31-90天(紧急)</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill warning" style="width: ${Math.max(stats.ageDistribution.warning.count / Math.max(stats.outboundCount, 1) * 100, 5)}%">
+                                        ${stats.ageDistribution.warning.count}单
+                                    </div>
+                                </div>
+                                <div class="bar-value">
+                                    ${formatCurrency(stats.ageDistribution.warning.amount)} | ${(stats.ageDistribution.warning.amount / total * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">91-180天(紧急)</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill danger" style="width: ${Math.max(stats.ageDistribution.danger.count / Math.max(stats.outboundCount, 1) * 100, 5)}%">
+                                        ${stats.ageDistribution.danger.count}单
+                                    </div>
+                                </div>
+                                <div class="bar-value">
+                                    ${formatCurrency(stats.ageDistribution.danger.amount)} | ${(stats.ageDistribution.danger.amount / total * 100).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top: 24px;">👔 业务员未结算排名</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>排名</th>
+                                    <th>业务员</th>
+                                    <th>客户数</th>
+                                    <th>未结算金额</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${salespersonStats.map((s, i) => `
+                                    <tr>
+                                        <td>${i + 1}</td>
+                                        <td>${s.name}</td>
+                                        <td class="number">${s.customerCount}</td>
+                                        <td class="number ${s.totalUnsettled < 0 ? 'negative' : ''}">${formatCurrency(s.totalUnsettled)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="section-title" style="margin-top: 24px;">⚠️ 重点关注</h3>
+                    <div class="attention-grid">
+                        <div class="attention-card warning">
+                            <div class="attention-label">超10万客户数</div>
+                            <div class="attention-value">${stats.over100kCustomers || 0} 个</div>
+                        </div>
+                        <div class="attention-card danger">
+                            <div class="attention-label">负金额客户数</div>
+                            <div class="attention-value">${stats.negativeAmountCustomers || 0} 个</div>
+                        </div>
+                        <div class="attention-card">
+                            <div class="attention-label">TOP10客户金额</div>
+                            <div class="attention-value">${formatCurrency(stats.top10Amount)}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">占比 ${stats.top10Percent.toFixed(1)}%</div>
+                        </div>
+                        <div class="attention-card danger">
+                            <div class="attention-label">91天以上应收</div>
+                            <div class="attention-value">${formatCurrency(stats.over90DaysAmount)}</div>
+                        </div>
+                        <div class="attention-card">
+                            <div class="attention-label">最早未结算单据</div>
+                            <div class="attention-value">${stats.earliestDate ? stats.earliestDate.toLocaleDateString() : '-'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('tab-0').innerHTML = html;
+        }
+
+        function renderSalespersonAgeTab() {
+            const stats = getSalespersonStats();
+            let totalRow = {
+                name: '合计',
+                customerCount: stats.reduce((s, r) => s + r.customerCount, 0),
+                totalUnsettled: stats.reduce((s, r) => s + r.totalUnsettled, 0),
+                normalAmount: stats.reduce((s, r) => s + r.normalAmount, 0),
+                warningAmount: stats.reduce((s, r) => s + r.warningAmount, 0),
+                dangerAmount: stats.reduce((s, r) => s + r.dangerAmount, 0)
+            };
+            totalRow.over30DaysPercent = totalRow.totalUnsettled !== 0 ? 
+                ((totalRow.warningAmount + totalRow.dangerAmount) / totalRow.totalUnsettled * 100) : 0;
+
+            const html = `
+                <div class="card">
+                    <h3 class="section-title">👔 业务员账龄汇总</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>业务员</th>
+                                    <th>客户数</th>
+                                    <th>未结算总额</th>
+                                    <th>0-30天(正常)</th>
+                                    <th>31-90天(紧急)</th>
+                                    <th>91-180天(紧急)</th>
+                                    <th>180天以上(紧急)</th>
+                                    <th>紧急金额</th>
+                                    <th>30天以上占比</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${stats.map(s => `
+                                    <tr>
+                                        <td>${s.name}</td>
+                                        <td class="number">${s.customerCount}</td>
+                                        <td class="number ${s.totalUnsettled < 0 ? 'negative' : ''}">${formatCurrency(s.totalUnsettled)}</td>
+                                        <td class="number positive">${formatCurrency(s.normalAmount)}</td>
+                                        <td class="number warning">${formatCurrency(s.warningAmount)}</td>
+                                        <td class="number danger">${formatCurrency(s.dangerAmount)}</td>
+                                        <td class="number danger">-</td>
+                                        <td class="number danger">${formatCurrency(s.warningAmount + s.dangerAmount)}</td>
+                                        <td class="number">${s.over30DaysPercent.toFixed(1)}%</td>
+                                    </tr>
+                                `).join('')}
+                                <tr class="summary-row">
+                                    <td>${totalRow.name}</td>
+                                    <td class="number">${totalRow.customerCount}</td>
+                                    <td class="number">${formatCurrency(totalRow.totalUnsettled)}</td>
+                                    <td class="number positive">${formatCurrency(totalRow.normalAmount)}</td>
+                                    <td class="number warning">${formatCurrency(totalRow.warningAmount)}</td>
+                                    <td class="number danger">${formatCurrency(totalRow.dangerAmount)}</td>
+                                    <td class="number danger">-</td>
+                                    <td class="number danger">${formatCurrency(totalRow.warningAmount + totalRow.dangerAmount)}</td>
+                                    <td class="number">${totalRow.over30DaysPercent.toFixed(1)}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('tab-1').innerHTML = html;
+        }
+
+        function renderCustomerDetailTab() {
+            const customers = getCustomerDetails();
+
+            const html = `
+                <div class="card">
+                    <h3 class="section-title">📋 全部未结算客户明细（按金额降序）</h3>
+                    <div class="search-box">
+                        <input type="text" id="customerSearch" placeholder="🔍 搜索客户名称..." oninput="filterCustomerTable()">
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>客户名称</th>
+                                    <th>未结算金额</th>
+                                    <th>单据数</th>
+                                    <th>账龄区间</th>
+                                    <th>最早单据日期</th>
+                                    <th>最近单据日期</th>
+                                    <th>业务员</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${customers.map((c, i) => `
+                                    <tr class="${c.unsettled < 0 ? 'urgent' : (c.ageGroup === 'normal' ? 'normal' : '')}" data-name="${c.name.toLowerCase()}">
+                                        <td>${i + 1}</td>
+                                        <td>${c.name}</td>
+                                        <td class="number ${c.unsettled < 0 ? 'negative' : ''}">${formatCurrency(c.unsettled)}</td>
+                                        <td class="number">${c.count}</td>
+                                        <td class="${c.ageGroup === 'danger' ? 'danger' : (c.ageGroup === 'warning' ? 'warning' : 'success')}">
+                                            ${c.ageRange}
+                                        </td>
+                                        <td>${c.earliestDate ? c.earliestDate.toLocaleDateString() : '-'}</td>
+                                        <td>${c.latestDate ? c.latestDate.toLocaleDateString() : '-'}</td>
+                                        <td>${c.salesperson}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('tab-2').innerHTML = html;
+        }
+
+        function filterCustomerTable() {
+            const search = document.getElementById('customerSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#customerTable tbody tr');
+            rows.forEach(row => {
+                const name = row.dataset.name;
+                row.style.display = name.includes(search) ? '' : 'none';
+            });
+        }
+
+        function renderByAgeTab() {
+            const customers = getCustomerDetails();
+            const groups = {
+                normal: customers.filter(c => c.ageGroup === 'normal'),
+                warning: customers.filter(c => c.ageGroup === 'warning'),
+                danger: customers.filter(c => c.ageGroup === 'danger')
+            };
+
+            let html = `<div class="card"><h3 class="section-title">📂 按账龄分类</h3>`;
+
+            const groupConfig = [
+                { key: 'normal', label: '0-30天(正常)', class: 'normal' },
+                { key: 'warning', label: '31-90天(紧急)', class: 'warning' },
+                { key: 'danger', label: '91-180天以上(紧急)', class: 'danger' }
+            ];
+
+            for (const cfg of groupConfig) {
+                const items = groups[cfg.key];
+                if (!items || items.length === 0) continue;
+
+                const totalAmount = items.reduce((s, c) => s + c.unsettled, 0);
+
+                html += `
+                    <div class="age-group">
+                        <div class="age-group-header ${cfg.class}">
+                            <div class="age-group-title">${cfg.label}</div>
+                            <div class="age-group-stats">
+                                客户数: ${items.length} | 金额合计: ${formatCurrency(totalAmount)}
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>客户名称</th>
+                                        <th>未结算金额</th>
+                                        <th>单据数</th>
+                                        <th>紧急程度</th>
+                                        <th>最早单据日期</th>
+                                        <th>最近单据日期</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${items.map((c, i) => `
+                                        <tr class="${c.unsettled < 0 ? 'urgent' : ''}">
+                                            <td>${i + 1}</td>
+                                            <td>${c.name}</td>
+                                            <td class="number ${c.unsettled < 0 ? 'negative' : ''}">${formatCurrency(c.unsettled)}</td>
+                                            <td class="number">${c.count}</td>
+                                            <td class="${cfg.class === 'danger' ? 'danger' : (cfg.class === 'warning' ? 'warning' : 'success')}">
+                                                ${cfg.class === 'danger' ? '🔴 紧急' : (cfg.class === 'warning' ? '🟡 注意' : '🟢 正常')}
+                                            </td>
+                                            <td>${c.earliestDate ? c.earliestDate.toLocaleDateString() : '-'}</td>
+                                            <td>${c.latestDate ? c.latestDate.toLocaleDateString() : '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="summary-row">
+                                        <td colspan="2">小计</td>
+                                        <td class="number">${formatCurrency(totalAmount)}</td>
+                                        <td colspan="4"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            document.getElementById('tab-3').innerHTML = html;
+        }
+
+        function renderEmployeeTab(tabIdx, empName) {
+            const empData = employeeData[empName];
+            if (!empData) return;
+
+            let totalUnsettled = 0;
+            let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
+            const customerGroups = { normal: [], warning: [], danger: [] };
+
+            for (const [custName, custData] of Object.entries(empData.customers)) {
+                totalUnsettled += custData.unsettled;
+                
+                let maxDanger = 0, maxWarning = 0;
+                for (const r of custData.records) {
+                    if (r.ageGroup) {
+                        if (r.ageGroup.level === 'danger') maxDanger++;
+                        else if (r.ageGroup.level === 'warning') maxWarning++;
+                    }
+                }
+                
+                let group = 'normal';
+                if (maxDanger > 0) {
+                    group = 'danger';
+                    dangerAmount += custData.unsettled;
+                } else if (maxWarning > 0) {
+                    group = 'warning';
+                    warningAmount += custData.unsettled;
+                } else {
+                    normalAmount += custData.unsettled;
+                }
+
+                customerGroups[group].push({
+                    name: custName,
+                    unsettled: custData.unsettled,
+                    count: custData.records.length,
+                    earliestDate: custData.earliestDate,
+                    latestDate: custData.latestDate
+                });
+            }
+
+            const urgentAmount = warningAmount + dangerAmount;
+            const urgentPercent = totalUnsettled !== 0 ? (urgentAmount / totalUnsettled * 100) : 0;
+
+            let html = `
+                <div class="card">
+                    <div class="employee-header">
+                        <div class="employee-title">${empName} — 应收账款账龄明细</div>
+                        <div class="employee-meta">
+                            <span>👥 客户数: ${Object.keys(empData.customers).length}</span>
+                            <span>💰 未结算总额: ${formatCurrency(totalUnsettled)}</span>
+                            <span>⚠️ 30天以上紧急: ${formatCurrency(urgentAmount)} (${urgentPercent.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+            `;
+
+            const groupConfig = [
+                { key: 'normal', label: '0-30天(正常)', class: 'normal' },
+                { key: 'warning', label: '31-90天(紧急)', class: 'warning' },
+                { key: 'danger', label: '91天以上(紧急)', class: 'danger' }
+            ];
+
+            for (const cfg of groupConfig) {
+                const items = customerGroups[cfg.key];
+                if (!items || items.length === 0) continue;
+
+                const groupTotal = items.reduce((s, c) => s + c.unsettled, 0);
+
+                html += `
+                    <div class="age-group">
+                        <div class="age-group-header ${cfg.class}">
+                            <div class="age-group-title">${cfg.label}</div>
+                            <div class="age-group-stats">
+                                客户数: ${items.length} | 金额合计: ${formatCurrency(groupTotal)}
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>客户名称</th>
+                                        <th>未结算金额</th>
+                                        <th>单据数</th>
+                                        <th>最早单据日期</th>
+                                        <th>最近单据日期</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${items.map((c, i) => `
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td>${c.name}</td>
+                                            <td class="number ${c.unsettled < 0 ? 'negative' : ''}">${formatCurrency(c.unsettled)}</td>
+                                            <td class="number">${c.count}</td>
+                                            <td>${c.earliestDate ? c.earliestDate.toLocaleDateString() : '-'}</td>
+                                            <td>${c.latestDate ? c.latestDate.toLocaleDateString() : '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="summary-row">
+                                        <td colspan="2">小计</td>
+                                        <td class="number">${formatCurrency(groupTotal)}</td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                    <div style="background: var(--primary-pale); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; border: 1px solid var(--primary-lighter);">
+                        <strong>📊 总计</strong>：未结算 ${formatCurrency(totalUnsettled)} | 
+                        正常 ${formatCurrency(normalAmount)} | 
+                        紧急 ${formatCurrency(urgentAmount)} (${urgentPercent.toFixed(1)}%)
+                    </div>
+                </div>
+            `;
+
+            document.getElementById(`tab-${tabIdx}`).innerHTML = html;
+        }
+
+        // ==================== Export Functions ====================
+        async function exportCurrentTab() {
+            const tabIdx = activeTab;
+            const tabInfo = window.allTabs[tabIdx];
+            await exportToExcel([{ title: tabInfo.name, tabIdx }], `应收账款分析_${tabInfo.name}.xlsx`);
+        }
+
+        async function exportAllTabs() {
+            const exports = [
+                { title: '汇总统计', tabIdx: 0 },
+                { title: '业务员账龄汇总', tabIdx: 1 },
+                { title: '全部未结算客户明细', tabIdx: 2 },
+                { title: '按账龄分类', tabIdx: 3 }
+            ];
+
+            const empNames = Object.keys(employeeData).sort();
+            for (let i = 0; i < empNames.length; i++) {
+                exports.push({ title: `${empNames[i]} — 明细`, tabIdx: 4 + i });
+            }
+
+            await exportToExcel(exports, '应收账款分析_全部.xlsx');
+        }
+
+        async function exportToExcel(sheets, filename) {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = '张洪杰';
+            workbook.created = new Date();
+
+            for (const sheet of sheets) {
+                const ws = workbook.addWorksheet(sheet.title);
+                await addSheetContent(ws, sheet.tabIdx);
+            }
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            saveAs(new Blob([buffer]), filename);
+        }
+
+        async function addSheetContent(ws, tabIdx) {
+            const headerStyle = {
+                font: { bold: true, color: { argb: 'FFFFFFFF' } },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: { top: { style: 'thin', color: { argb: 'FF000000' } }, bottom: { style: 'thin', color: { argb: 'FF000000' } }, left: { style: 'thin', color: { argb: 'FF000000' } }, right: { style: 'thin', color: { argb: 'FF000000' } } }
+            };
+
+            if (tabIdx === 0) {
+                ws.addRow(['应收账款分析汇总']);
+                ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.mergeCells('A1:D1');
+
+                const stats = calculateStats();
+                ws.addRow([`截止日期: ${cutoffDate ? cutoffDate.toLocaleDateString() : '-'}`]);
+                ws.addRow([]);
+                ws.addRow(['指标', '数值']);
+                ws.addRow(['客户总数', stats.totalCustomers]);
+                ws.addRow(['出库单数', stats.outboundCount]);
+                ws.addRow(['退货单数', stats.returnCount]);
+                ws.addRow(['出库金额', stats.outboundAmount]);
+                ws.addRow(['退货金额', stats.returnAmount]);
+                ws.addRow(['未结算总金额', stats.totalUnsettled]);
+
+                ws.addRow([]);
+                ws.addRow(['账龄分布']);
+                ws.addRow(['区间', '单据数', '金额', '占比']);
+                
+                const total = stats.totalUnsettled || 1;
+                ws.addRow(['0-30天(正常)', stats.ageDistribution.normal.count, stats.ageDistribution.normal.amount, (stats.ageDistribution.normal.amount / total * 100).toFixed(1) + '%']);
+                ws.addRow(['31-90天(紧急)', stats.ageDistribution.warning.count, stats.ageDistribution.warning.amount, (stats.ageDistribution.warning.amount / total * 100).toFixed(1) + '%']);
+                ws.addRow(['91-180天(紧急)', stats.ageDistribution.danger.count, stats.ageDistribution.danger.amount, (stats.ageDistribution.danger.amount / total * 100).toFixed(1) + '%']);
+
+                ws.addRow([]);
+                ws.addRow(['业务员排名']);
+                ws.addRow(['排名', '业务员', '客户数', '未结算金额']);
+                const empStats = getSalespersonStats();
+                empStats.forEach((s, i) => {
+                    ws.addRow([i + 1, s.name, s.customerCount, s.totalUnsettled]);
+                });
+
+                ws.getRow(1).font = { bold: true, size: 14 };
+                ws.columns.forEach(col => col.width = 20);
+
+            } else if (tabIdx === 1) {
+                ws.addRow(['业务员账龄汇总']);
+                ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.mergeCells('A1:I1');
+
+                ws.addRow(['业务员', '客户数', '未结算总额', '0-30天(正常)', '31-90天(紧急)', '91-180天(紧急)', '180天以上(紧急)', '紧急金额', '30天以上占比']);
+                
+                const empStats = getSalespersonStats();
+                empStats.forEach(s => {
+                    ws.addRow([s.name, s.customerCount, s.totalUnsettled, s.normalAmount, s.warningAmount, s.dangerAmount, 0, s.warningAmount + s.dangerAmount, (s.over30DaysPercent / 100).toFixed(2)]);
+                });
+
+                const total = empStats.reduce((acc, s) => ({
+                    customerCount: acc.customerCount + s.customerCount,
+                    totalUnsettled: acc.totalUnsettled + s.totalUnsettled,
+                    normalAmount: acc.normalAmount + s.normalAmount,
+                    warningAmount: acc.warningAmount + s.warningAmount,
+                    dangerAmount: acc.dangerAmount + s.dangerAmount
+                }), { customerCount: 0, totalUnsettled: 0, normalAmount: 0, warningAmount: 0, dangerAmount: 0 });
+                
+                ws.addRow(['合计', total.customerCount, total.totalUnsettled, total.normalAmount, total.warningAmount, total.dangerAmount, 0, total.warningAmount + total.dangerAmount, ((total.warningAmount + total.dangerAmount) / (total.totalUnsettled || 1)).toFixed(2)]);
+
+                ws.getRow(2).eachCell(cell => cell.style = headerStyle);
+
+            } else if (tabIdx === 2) {
+                ws.addRow(['全部未结算客户明细']);
+                ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.mergeCells('A1:H1');
+
+                ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '账龄区间', '最早单据日期', '最近单据日期', '业务员']);
+                
+                const customers = getCustomerDetails();
+                customers.forEach((c, i) => {
+                    ws.addRow([i + 1, c.name, c.unsettled, c.count, c.ageRange, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-', c.salesperson]);
+                });
+
+                ws.getRow(2).eachCell(cell => cell.style = headerStyle);
+
+            } else if (tabIdx === 3) {
+                const customers = getCustomerDetails();
+                const groups = {
+                    normal: customers.filter(c => c.ageGroup === 'normal'),
+                    warning: customers.filter(c => c.ageGroup === 'warning'),
+                    danger: customers.filter(c => c.ageGroup === 'danger')
+                };
+
+                let rowNum = 1;
+                
+                const groupConfig = [
+                    { key: 'normal', label: '0-30天(正常)' },
+                    { key: 'warning', label: '31-90天(紧急)' },
+                    { key: 'danger', label: '91-180天以上(紧急)' }
+                ];
+
+                for (const cfg of groupConfig) {
+                    const items = groups[cfg.key];
+                    if (!items || items.length === 0) continue;
+
+                    ws.addRow([cfg.label]);
+                    ws.getCell(`A${rowNum}`).font = { bold: true };
+                    rowNum++;
+
+                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '紧急程度', '最早单据日期', '最近单据日期']);
+                    ws.getRow(rowNum).eachCell(cell => cell.style = headerStyle);
+                    rowNum++;
+
+                    items.forEach((c, i) => {
+                        ws.addRow([i + 1, c.name, c.unsettled, c.count, cfg.label, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-']);
+                        rowNum++;
+                    });
+
+                    const total = items.reduce((s, c) => s + c.unsettled, 0);
+                    ws.addRow(['小计', '', total, items.length, '', '', '']);
+                    ws.getRow(rowNum).eachCell(cell => {
+                        cell.font = { bold: true };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                    });
+                    rowNum++;
+                    rowNum++;
+                }
+
+            } else {
+                const empIdx = tabIdx - 4;
+                const empNames = Object.keys(employeeData).sort();
+                const empName = empNames[empIdx];
+                const empData = employeeData[empName];
+
+                ws.addRow([`${empName} — 应收账款账龄明细`]);
+                ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.mergeCells('A1:F1');
+
+                let totalUnsettled = 0;
+                let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
+                const customerGroups = { normal: [], warning: [], danger: [] };
+
+                for (const [custName, custData] of Object.entries(empData.customers)) {
+                    totalUnsettled += custData.unsettled;
+                    
+                    let maxDanger = 0, maxWarning = 0;
+                    for (const r of custData.records) {
+                        if (r.ageGroup) {
+                            if (r.ageGroup.level === 'danger') maxDanger++;
+                            else if (r.ageGroup.level === 'warning') maxWarning++;
+                        }
+                    }
+                    
+                    let group = 'normal';
+                    if (maxDanger > 0) {
+                        group = 'danger';
+                        dangerAmount += custData.unsettled;
+                    } else if (maxWarning > 0) {
+                        group = 'warning';
+                        warningAmount += custData.unsettled;
+                    } else {
+                        normalAmount += custData.unsettled;
+                    }
+
+                    customerGroups[group].push({
+                        name: custName,
+                        unsettled: custData.unsettled,
+                        count: custData.records.length,
+                        earliestDate: custData.earliestDate,
+                        latestDate: custData.latestDate
+                    });
+                }
+
+                ws.addRow([`客户数: ${Object.keys(empData.customers).length} | 未结算总额: ${formatCurrency(totalUnsettled)} | 30天以上紧急: ${formatCurrency(warningAmount + dangerAmount)}`]);
+                ws.addRow([]);
+
+                const groupConfig = [
+                    { key: 'normal', label: '0-30天(正常)' },
+                    { key: 'warning', label: '31-90天(紧急)' },
+                    { key: 'danger', label: '91天以上(紧急)' }
+                ];
+
+                for (const cfg of groupConfig) {
+                    const items = customerGroups[cfg.key];
+                    if (!items || items.length === 0) continue;
+
+                    ws.addRow([cfg.label]);
+                    ws.getCell('A' + (ws.rowCount)).font = { bold: true };
+                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '最早单据日期', '最近单据日期']);
+                    
+                    const headerRow = ws.rowCount;
+                    ws.getRow(headerRow).eachCell(cell => cell.style = headerStyle);
+
+                    items.forEach((c, i) => {
+                        ws.addRow([i + 1, c.name, c.unsettled, c.count, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-']);
+                    });
+
+                    const groupTotal = items.reduce((s, c) => s + c.unsettled, 0);
+                    ws.addRow(['小计', '', groupTotal, items.length, '', '']);
+                    ws.getRow(ws.rowCount).eachCell(cell => {
+                        cell.font = { bold: true };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                    });
+                    ws.addRow([]);
+                }
+
+                ws.addRow(['总计', '', totalUnsettled, '', '', '']);
+                ws.getRow(ws.rowCount).eachCell(cell => {
+                    cell.font = { bold: true };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBFDBFE' } };
+                });
+            }
+
+            ws.columns.forEach(column => {
+                let maxLength = 10;
+                column.eachCell({ includeEmpty: true }, cell => {
+                    const length = cell.value ? String(cell.value).length : 0;
+                    if (length > maxLength) maxLength = Math.min(length, 50);
+                });
+                column.width = maxLength + 2;
+            });
+        }
+
+        // ==================== Event Handlers ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            const cutoffDateInput = document.getElementById('cutoffDate');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    parseFile(e.target.files[0]);
+                }
+            });
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    parseFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            cutoffDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    cutoffDate = new Date(this.value);
+                    cutoffDate.setHours(23, 59, 59, 999);
+                    document.getElementById('dateInfo').textContent = `✓ 手动设置：${cutoffDate.toLocaleDateString()}`;
+                    if (parsedData.length > 0) {
+                        for (const record of parsedData) {
+                            if (record.docDate) {
+                                record.age = daysBetween(record.docDate, cutoffDate);
+                                record.ageGroup = getAgeGroup(record.age);
+                            }
+                        }
+                        groupBySalesperson();
+                        renderAnalysis();
+                    }
+                }
+            });
+
+            document.getElementById('exportCurrentBtn').addEventListener('click', exportCurrentTab);
+            document.getElementById('exportAllBtn').addEventListener('click', exportAllTabs);
+
+            const today = new Date();
+            cutoffDateInput.value = today.toISOString().split('T')[0];
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
