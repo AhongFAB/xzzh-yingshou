@@ -4,8 +4,8 @@
   "description": "智能分析销售出库单数据，账龄预警，业务员汇总",
   "start_url": "/ar-receivable-tool/",
   "display": "standalone",
-  "background_color": "#f1f5f9",
-  "theme_color": "#2563eb",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
   "orientation": "any",
   "icons": [
     {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="应收账款分析工具 - 智能分析销售出库单数据">
-    <meta name="theme-color" content="#3b82f6">
+    <meta name="theme-color" content="#0ea5e9">
     <title>应收账款分析工具</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
@@ -14,33 +14,55 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-light: #3b82f6;
-            --primary-lighter: #60a5fa;
-            --primary-pale: #eff6ff;
-            --success: #059669;
-            --success-light: #10b981;
-            --success-pale: #ecfdf5;
-            --warning: #d97706;
-            --warning-light: #f59e0b;
-            --warning-pale: #fffbeb;
-            --danger: #dc2626;
-            --danger-light: #ef4444;
-            --danger-pale: #fef2f2;
-            --bg-page: #f1f5f9;
-            --bg-white: #ffffff;
-            --bg-gray: #f8fafc;
-            --border: #e2e8f0;
-            --border-light: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
+            /* 天蓝色系主色调 */
+            --primary: #0ea5e9;
+            --primary-light: #38bdf8;
+            --primary-lighter: #7dd3fc;
+            --primary-pale: rgba(14, 165, 233, 0.15);
+            --primary-dark: #0284c7;
+            
+            /* 状态色 */
+            --success: #22c55e;
+            --success-light: #4ade80;
+            --success-dark: #16a34a;
+            --success-bg: rgba(34, 197, 94, 0.15);
+            
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --warning-dark: #d97706;
+            --warning-bg: rgba(245, 158, 11, 0.15);
+            
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --danger-dark: #dc2626;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+            
+            --orange: #f97316;
+            --orange-bg: rgba(249, 115, 22, 0.15);
+            
+            /* 深色背景 */
+            --bg-dark: #0f172a;
+            --bg-dark-2: #1e293b;
+            --bg-dark-3: #334155;
+            
+            /* 文字色 */
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
             --text-muted: #94a3b8;
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --radius-sm: 6px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
+            
+            /* 边框 */
+            --border: rgba(148, 163, 184, 0.2);
+            --border-light: rgba(148, 163, 184, 0.1);
+            
+            /* 阴影 */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
         }
 
         * {
@@ -51,7 +73,8 @@
 
         body {
             font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-page);
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-2) 50%, var(--bg-dark) 100%);
+            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
@@ -65,12 +88,14 @@
 
         /* Header */
         .header {
-            background: var(--bg-white);
-            padding: 24px 32px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 24px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
         }
 
         .header-content {
@@ -83,8 +108,11 @@
 
         .header h1 {
             font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -101,30 +129,37 @@
             text-align: right;
         }
 
+        .copyright strong {
+            color: var(--danger-light);
+        }
+
         /* Card */
         .card {
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             padding: 24px;
             margin-bottom: 24px;
-            border: 1px solid var(--border);
         }
 
         /* Upload Zone */
         .upload-zone {
-            border: 2px dashed var(--primary-lighter);
+            border: 2px dashed var(--primary);
             border-radius: var(--radius-lg);
             padding: 60px 40px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            background: var(--primary-pale);
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(56, 189, 248, 0.05) 100%);
         }
 
         .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--primary);
-            background: #dbeafe;
+            border-color: var(--primary-light);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(56, 189, 248, 0.1) 100%);
+            box-shadow: 0 0 30px rgba(14, 165, 233, 0.2);
         }
 
         .upload-icon {
@@ -155,8 +190,9 @@
             gap: 16px;
             margin-top: 20px;
             padding: 16px;
-            background: var(--primary-pale);
+            background: rgba(14, 165, 233, 0.1);
             border-radius: var(--radius-md);
+            border: 1px solid rgba(14, 165, 233, 0.2);
             flex-wrap: wrap;
         }
 
@@ -167,7 +203,7 @@
         }
 
         .date-controls input[type="date"] {
-            background: var(--bg-white);
+            background: rgba(15, 23, 42, 0.8);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             padding: 8px 12px;
@@ -176,8 +212,14 @@
             font-family: inherit;
         }
 
+        .date-controls input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
         .date-controls .info {
-            color: var(--primary);
+            color: var(--primary-light);
             font-size: 0.85rem;
         }
 
@@ -190,21 +232,24 @@
         }
 
         .stat-card {
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 20px;
-            border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .stat-card:hover {
             box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
 
         .stat-card .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -217,7 +262,7 @@
             color: var(--text-primary);
         }
 
-        .stat-card .stat-value.primary { color: var(--primary); }
+        .stat-card .stat-value.primary { color: var(--primary-light); }
         .stat-card .stat-value.success { color: var(--success); }
         .stat-card .stat-value.danger { color: var(--danger); }
         .stat-card .stat-value.warning { color: var(--warning); }
@@ -237,12 +282,12 @@
             display: flex;
             gap: 4px;
             padding: 4px;
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
             border-radius: var(--radius-md);
             overflow-x: auto;
             margin-bottom: 20px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
             flex-wrap: nowrap;
         }
 
@@ -261,13 +306,14 @@
         }
 
         .tab-btn:hover {
-            background: var(--primary-pale);
-            color: var(--primary);
+            background: rgba(14, 165, 233, 0.2);
+            color: var(--primary-light);
         }
 
         .tab-btn.active {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
         }
 
         .tab-content {
@@ -285,7 +331,7 @@
             color: var(--text-primary);
             margin-bottom: 16px;
             padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-lighter);
+            border-bottom: 2px solid var(--primary);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -303,7 +349,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            background: var(--bg-white);
+            background: rgba(15, 23, 42, 0.5);
         }
 
         th, td {
@@ -313,18 +359,18 @@
         }
 
         th {
-            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             font-weight: 600;
             white-space: nowrap;
         }
 
         tr:nth-child(even) td {
-            background: var(--bg-gray);
+            background: rgba(30, 41, 59, 0.3);
         }
 
         tr:hover td {
-            background: var(--primary-pale);
+            background: rgba(14, 165, 233, 0.1);
         }
 
         td.number {
@@ -333,7 +379,7 @@
         }
 
         td.negative {
-            color: var(--danger);
+            color: var(--danger-light);
             font-weight: 600;
         }
 
@@ -342,12 +388,12 @@
         }
 
         td.danger {
-            color: var(--danger);
+            color: var(--danger-light);
             font-weight: 600;
         }
 
         td.warning {
-            color: var(--warning);
+            color: var(--warning-light);
             font-weight: 600;
         }
 
@@ -357,16 +403,16 @@
         }
 
         tr.urgent td {
-            background: var(--danger-pale);
+            background: rgba(239, 68, 68, 0.15);
         }
 
         tr.normal td {
-            background: var(--success-pale);
+            background: rgba(34, 197, 94, 0.1);
         }
 
         /* Summary Row */
         .summary-row td {
-            background: var(--primary-pale) !important;
+            background: rgba(14, 165, 233, 0.2) !important;
             font-weight: 600;
             border-top: 2px solid var(--primary);
         }
@@ -381,11 +427,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 18px;
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
             border-radius: var(--radius-md);
             margin-bottom: 12px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
         }
 
         .age-group-header.normal {
@@ -412,7 +458,8 @@
 
         /* Chart */
         .chart-container {
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 20px;
@@ -442,7 +489,7 @@
         .bar-track {
             flex: 1;
             height: 28px;
-            background: var(--bg-gray);
+            background: rgba(15, 23, 42, 0.5);
             border-radius: 6px;
             overflow: hidden;
         }
@@ -460,9 +507,9 @@
             transition: width 0.5s ease;
         }
 
-        .bar-fill.normal { background: linear-gradient(90deg, var(--success), var(--success-light)); }
-        .bar-fill.warning { background: linear-gradient(90deg, var(--warning), var(--warning-light)); }
-        .bar-fill.danger { background: linear-gradient(90deg, var(--danger), var(--danger-light)); }
+        .bar-fill.normal { background: linear-gradient(90deg, var(--success-dark), var(--success)); }
+        .bar-fill.warning { background: linear-gradient(90deg, var(--warning-dark), var(--warning)); }
+        .bar-fill.danger { background: linear-gradient(90deg, var(--danger-dark), var(--danger)); }
 
         .bar-value {
             width: 180px;
@@ -481,13 +528,12 @@
             width: 100%;
             max-width: 350px;
             padding: 10px 14px;
-            background: var(--bg-white);
+            background: rgba(15, 23, 42, 0.8);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             color: var(--text-primary);
             font-size: 0.9rem;
             font-family: inherit;
-            box-shadow: var(--shadow-sm);
         }
 
         .search-box input::placeholder {
@@ -497,7 +543,7 @@
         .search-box input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
         }
 
         /* Export Buttons */
@@ -520,27 +566,28 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: var(--shadow-sm);
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
 
         .btn-primary:hover {
-            background: var(--primary-light);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.8);
             color: var(--text-primary);
             border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: var(--bg-gray);
+            background: rgba(30, 41, 59, 1);
+            border-color: var(--primary);
         }
 
         .btn:disabled {
@@ -556,21 +603,21 @@
         }
 
         .attention-card {
-            background: var(--bg-white);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 16px;
-            box-shadow: var(--shadow-sm);
         }
 
         .attention-card.danger {
-            border-color: var(--danger-light);
-            background: var(--danger-pale);
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.1);
         }
 
         .attention-card.warning {
-            border-color: var(--warning-light);
-            background: var(--warning-pale);
+            border-color: rgba(245, 158, 11, 0.5);
+            background: rgba(245, 158, 11, 0.1);
         }
 
         .attention-label {
@@ -589,17 +636,17 @@
 
         /* Employee Header */
         .employee-header {
-            background: linear-gradient(135deg, var(--primary-pale) 0%, #dbeafe 100%);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(14, 165, 233, 0.05) 100%);
             border-radius: var(--radius-lg);
             padding: 24px;
             margin-bottom: 24px;
-            border: 1px solid var(--primary-lighter);
+            border: 1px solid rgba(14, 165, 233, 0.3);
         }
 
         .employee-title {
             font-size: 1.3rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--primary-light);
             margin-bottom: 12px;
         }
 
@@ -629,11 +676,11 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-gray);
+            background: rgba(15, 23, 42, 0.5);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border);
+            background: var(--bg-dark-3);
             border-radius: 4px;
         }
 
@@ -681,6 +728,7 @@
 
             .card, .header {
                 box-shadow: none;
+                background: white;
             }
         }
     </style>
@@ -696,7 +744,7 @@
                 </div>
                 <div class="copyright">
                     <p>开发者：张洪杰</p>
-                    <p style="color: var(--danger); font-weight: 600;">侵权必究</p>
+                    <p><strong>侵权必究</strong></p>
                 </div>
             </div>
         </header>
@@ -825,10 +873,10 @@
         }
 
         function getAgeGroup(days) {
-            if (days <= 30) return { name: '0-30天(正常)', level: 'normal', order: 1 };
-            if (days <= 90) return { name: '31-90天(紧急)', level: 'warning', order: 2 };
-            if (days <= 180) return { name: '91-180天(紧急)', level: 'danger', order: 3 };
-            return { name: '180天以上(紧急)', level: 'danger', order: 4 };
+            if (days <= 30) return { name: '0-30天', level: 'normal', order: 1 };
+            if (days <= 90) return { name: '31-90天', level: 'warning', order: 2 };
+            if (days <= 180) return { name: '91-180天', level: 'danger', order: 3 };
+            return { name: '180天以上', level: 'danger180', order: 4 };
         }
 
         function matchColumn(headers, targetColumns) {
@@ -1033,7 +1081,8 @@
                 ageDistribution: {
                     normal: { count: 0, amount: 0 },
                     warning: { count: 0, amount: 0 },
-                    danger: { count: 0, amount: 0 }
+                    danger: { count: 0, amount: 0 },
+                    danger180: { count: 0, amount: 0 }
                 },
                 negativeAmountCustomers: 0,
                 top10Percent: 0,
@@ -1044,8 +1093,19 @@
 
             for (const record of parsedData) {
                 if (record.ageGroup) {
-                    stats.ageDistribution[record.ageGroup.level].count++;
-                    stats.ageDistribution[record.ageGroup.level].amount += record.unsettled;
+                    if (record.ageGroup.level === 'normal') {
+                        stats.ageDistribution.normal.count++;
+                        stats.ageDistribution.normal.amount += record.unsettled;
+                    } else if (record.ageGroup.level === 'warning') {
+                        stats.ageDistribution.warning.count++;
+                        stats.ageDistribution.warning.amount += record.unsettled;
+                    } else if (record.ageGroup.level === 'danger') {
+                        stats.ageDistribution.danger.count++;
+                        stats.ageDistribution.danger.amount += record.unsettled;
+                    } else if (record.ageGroup.level === 'danger180') {
+                        stats.ageDistribution.danger180.count++;
+                        stats.ageDistribution.danger180.amount += record.unsettled;
+                    }
                 }
                 if (record.unsettled < 0) {
                     stats.negativeAmountCustomers++;
@@ -1079,7 +1139,7 @@
             
             for (const [empName, empData] of Object.entries(employeeData)) {
                 let totalUnsettled = 0;
-                let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
+                let normalAmount = 0, warningAmount = 0, dangerAmount = 0, danger180Amount = 0;
 
                 for (const record of empData.records) {
                     totalUnsettled += record.unsettled;
@@ -1088,14 +1148,16 @@
                             normalAmount += record.unsettled;
                         } else if (record.ageGroup.level === 'warning') {
                             warningAmount += record.unsettled;
-                        } else {
+                        } else if (record.ageGroup.level === 'danger') {
                             dangerAmount += record.unsettled;
+                        } else if (record.ageGroup.level === 'danger180') {
+                            danger180Amount += record.unsettled;
                         }
                     }
                 }
 
-                const urgentAmount = warningAmount + dangerAmount;
-                const over30DaysPercent = totalUnsettled !== 0 ? ((warningAmount + dangerAmount) / totalUnsettled * 100) : 0;
+                const urgentAmount = warningAmount + dangerAmount + danger180Amount;
+                const over30DaysPercent = totalUnsettled !== 0 ? (urgentAmount / totalUnsettled * 100) : 0;
 
                 result.push({
                     name: empName,
@@ -1104,6 +1166,7 @@
                     normalAmount,
                     warningAmount,
                     dangerAmount,
+                    danger180Amount,
                     urgentAmount,
                     over30DaysPercent
                 });
@@ -1136,12 +1199,20 @@
             }
 
             const result = Object.values(customerTotals).map(c => {
-                const ageGroups = { normal: 0, warning: 0, danger: 0 };
+                const ageGroups = { normal: 0, warning: 0, danger: 0, danger180: 0 };
                 for (const r of c.records) {
-                    if (r.ageGroup) ageGroups[r.ageGroup.level]++;
+                    if (r.ageGroup) {
+                        if (r.ageGroup.level === 'danger180') {
+                            ageGroups.danger180++;
+                        } else {
+                            ageGroups[r.ageGroup.level]++;
+                        }
+                    }
                 }
                 let dominantGroup = 'normal';
-                if (ageGroups.danger >= ageGroups.warning && ageGroups.danger > 0) {
+                if (ageGroups.danger180 > 0) {
+                    dominantGroup = 'danger180';
+                } else if (ageGroups.danger > 0) {
                     dominantGroup = 'danger';
                 } else if (ageGroups.warning > 0) {
                     dominantGroup = 'warning';
@@ -1308,6 +1379,17 @@
                                     ${formatCurrency(stats.ageDistribution.danger.amount)} | ${(stats.ageDistribution.danger.amount / total * 100).toFixed(1)}%
                                 </div>
                             </div>
+                            <div class="bar-item">
+                                <div class="bar-label">180天以上</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill danger" style="width: ${Math.max(stats.ageDistribution.danger180.count / Math.max(stats.outboundCount, 1) * 100, 5)}%">
+                                        ${stats.ageDistribution.danger180.count}单
+                                    </div>
+                                </div>
+                                <div class="bar-value">
+                                    ${formatCurrency(stats.ageDistribution.danger180.amount)} | ${(stats.ageDistribution.danger180.amount / total * 100).toFixed(1)}%
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1373,10 +1455,12 @@
                 totalUnsettled: stats.reduce((s, r) => s + r.totalUnsettled, 0),
                 normalAmount: stats.reduce((s, r) => s + r.normalAmount, 0),
                 warningAmount: stats.reduce((s, r) => s + r.warningAmount, 0),
-                dangerAmount: stats.reduce((s, r) => s + r.dangerAmount, 0)
+                dangerAmount: stats.reduce((s, r) => s + r.dangerAmount, 0),
+                danger180Amount: stats.reduce((s, r) => s + r.danger180Amount, 0)
             };
+            totalRow.urgentAmount = totalRow.warningAmount + totalRow.dangerAmount + totalRow.danger180Amount;
             totalRow.over30DaysPercent = totalRow.totalUnsettled !== 0 ? 
-                ((totalRow.warningAmount + totalRow.dangerAmount) / totalRow.totalUnsettled * 100) : 0;
+                (totalRow.urgentAmount / totalRow.totalUnsettled * 100) : 0;
 
             const html = `
                 <div class="card">
@@ -1405,8 +1489,8 @@
                                         <td class="number positive">${formatCurrency(s.normalAmount)}</td>
                                         <td class="number warning">${formatCurrency(s.warningAmount)}</td>
                                         <td class="number danger">${formatCurrency(s.dangerAmount)}</td>
-                                        <td class="number danger">-</td>
-                                        <td class="number danger">${formatCurrency(s.warningAmount + s.dangerAmount)}</td>
+                                        <td class="number danger">${formatCurrency(s.danger180Amount)}</td>
+                                        <td class="number danger">${formatCurrency(s.urgentAmount)}</td>
                                         <td class="number">${s.over30DaysPercent.toFixed(1)}%</td>
                                     </tr>
                                 `).join('')}
@@ -1417,8 +1501,8 @@
                                     <td class="number positive">${formatCurrency(totalRow.normalAmount)}</td>
                                     <td class="number warning">${formatCurrency(totalRow.warningAmount)}</td>
                                     <td class="number danger">${formatCurrency(totalRow.dangerAmount)}</td>
-                                    <td class="number danger">-</td>
-                                    <td class="number danger">${formatCurrency(totalRow.warningAmount + totalRow.dangerAmount)}</td>
+                                    <td class="number danger">${formatCurrency(totalRow.danger180Amount)}</td>
+                                    <td class="number danger">${formatCurrency(totalRow.urgentAmount)}</td>
                                     <td class="number">${totalRow.over30DaysPercent.toFixed(1)}%</td>
                                 </tr>
                             </tbody>
@@ -1460,7 +1544,7 @@
                                         <td>${c.name}</td>
                                         <td class="number ${c.unsettled < 0 ? 'negative' : ''}">${formatCurrency(c.unsettled)}</td>
                                         <td class="number">${c.count}</td>
-                                        <td class="${c.ageGroup === 'danger' ? 'danger' : (c.ageGroup === 'warning' ? 'warning' : 'success')}">
+                                        <td class="${c.ageGroup === 'danger180' || c.ageGroup === 'danger' ? 'danger' : (c.ageGroup === 'warning' ? 'warning' : 'success')}">
                                             ${c.ageRange}
                                         </td>
                                         <td>${c.earliestDate ? c.earliestDate.toLocaleDateString() : '-'}</td>
@@ -1491,7 +1575,8 @@
             const groups = {
                 normal: customers.filter(c => c.ageGroup === 'normal'),
                 warning: customers.filter(c => c.ageGroup === 'warning'),
-                danger: customers.filter(c => c.ageGroup === 'danger')
+                danger: customers.filter(c => c.ageGroup === 'danger'),
+                danger180: customers.filter(c => c.ageGroup === 'danger180')
             };
 
             let html = `<div class="card"><h3 class="section-title">📂 按账龄分类</h3>`;
@@ -1499,7 +1584,8 @@
             const groupConfig = [
                 { key: 'normal', label: '0-30天(正常)', class: 'normal' },
                 { key: 'warning', label: '31-90天(紧急)', class: 'warning' },
-                { key: 'danger', label: '91-180天以上(紧急)', class: 'danger' }
+                { key: 'danger', label: '91-180天(紧急)', class: 'danger' },
+                { key: 'danger180', label: '180天以上(紧急)', class: 'danger' }
             ];
 
             for (const cfg of groupConfig) {
@@ -1564,22 +1650,26 @@
             if (!empData) return;
 
             let totalUnsettled = 0;
-            let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
-            const customerGroups = { normal: [], warning: [], danger: [] };
+            let normalAmount = 0, warningAmount = 0, dangerAmount = 0, danger180Amount = 0;
+            const customerGroups = { normal: [], warning: [], danger: [], danger180: [] };
 
             for (const [custName, custData] of Object.entries(empData.customers)) {
                 totalUnsettled += custData.unsettled;
                 
-                let maxDanger = 0, maxWarning = 0;
+                let maxDanger = 0, maxWarning = 0, maxDanger180 = 0;
                 for (const r of custData.records) {
                     if (r.ageGroup) {
-                        if (r.ageGroup.level === 'danger') maxDanger++;
+                        if (r.ageGroup.level === 'danger180') maxDanger180++;
+                        else if (r.ageGroup.level === 'danger') maxDanger++;
                         else if (r.ageGroup.level === 'warning') maxWarning++;
                     }
                 }
                 
                 let group = 'normal';
-                if (maxDanger > 0) {
+                if (maxDanger180 > 0) {
+                    group = 'danger180';
+                    danger180Amount += custData.unsettled;
+                } else if (maxDanger > 0) {
                     group = 'danger';
                     dangerAmount += custData.unsettled;
                 } else if (maxWarning > 0) {
@@ -1598,7 +1688,7 @@
                 });
             }
 
-            const urgentAmount = warningAmount + dangerAmount;
+            const urgentAmount = warningAmount + dangerAmount + danger180Amount;
             const urgentPercent = totalUnsettled !== 0 ? (urgentAmount / totalUnsettled * 100) : 0;
 
             let html = `
@@ -1616,7 +1706,8 @@
             const groupConfig = [
                 { key: 'normal', label: '0-30天(正常)', class: 'normal' },
                 { key: 'warning', label: '31-90天(紧急)', class: 'warning' },
-                { key: 'danger', label: '91天以上(紧急)', class: 'danger' }
+                { key: 'danger', label: '91-180天(紧急)', class: 'danger' },
+                { key: 'danger180', label: '180天以上(紧急)', class: 'danger' }
             ];
 
             for (const cfg of groupConfig) {
@@ -1669,7 +1760,7 @@
             }
 
             html += `
-                    <div style="background: var(--primary-pale); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; border: 1px solid var(--primary-lighter);">
+                    <div style="background: rgba(14, 165, 233, 0.2); border-radius: var(--radius-md); padding: 16px; margin-top: 16px; border: 1px solid rgba(14, 165, 233, 0.3);">
                         <strong>📊 总计</strong>：未结算 ${formatCurrency(totalUnsettled)} | 
                         正常 ${formatCurrency(normalAmount)} | 
                         紧急 ${formatCurrency(urgentAmount)} (${urgentPercent.toFixed(1)}%)
@@ -1697,7 +1788,7 @@
 
             const empNames = Object.keys(employeeData).sort();
             for (let i = 0; i < empNames.length; i++) {
-                exports.push({ title: `${empNames[i]} — 明细`, tabIdx: 4 + i });
+                exports.push({ title: empNames[i], tabIdx: 4 + i });
             }
 
             await exportToExcel(exports, '应收账款分析_全部.xlsx');
@@ -1717,132 +1808,401 @@
             saveAs(new Blob([buffer]), filename);
         }
 
-        async function addSheetContent(ws, tabIdx) {
-            const headerStyle = {
+        // Excel样式定义
+        const styles = {
+            headerBlue: {
                 font: { bold: true, color: { argb: 'FFFFFFFF' } },
-                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } },
                 alignment: { horizontal: 'center', vertical: 'middle' },
-                border: { top: { style: 'thin', color: { argb: 'FF000000' } }, bottom: { style: 'thin', color: { argb: 'FF000000' } }, left: { style: 'thin', color: { argb: 'FF000000' } }, right: { style: 'thin', color: { argb: 'FF000000' } } }
-            };
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            headerBlueLeft: {
+                font: { bold: true, color: { argb: 'FFFFFFFF' } },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } },
+                alignment: { horizontal: 'left', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            normalGreen: {
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            warningYellow: {
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB9C' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            dangerOrange: {
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4B084' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            danger180Red: {
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            subtotalRow: {
+                font: { bold: true },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            totalRow: {
+                font: { bold: true },
+                fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBFDBFE' } },
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            normalCell: {
+                alignment: { vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            },
+            numberCell: {
+                alignment: { horizontal: 'right', vertical: 'middle' },
+                border: {
+                    top: { style: 'thin', color: { argb: 'FF000000' } },
+                    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                    left: { style: 'thin', color: { argb: 'FF000000' } },
+                    right: { style: 'thin', color: { argb: 'FF000000' } }
+                }
+            }
+        };
+
+        function applyCellStyle(cell, style) {
+            if (style.font) cell.font = style.font;
+            if (style.fill) cell.fill = style.fill;
+            if (style.alignment) cell.alignment = style.alignment;
+            if (style.border) cell.border = style.border;
+        }
+
+        async function addSheetContent(ws, tabIdx) {
+            // 设置数字格式
+            ws.inspectionsettings = { maxRow: 5000 };
 
             if (tabIdx === 0) {
-                ws.addRow(['应收账款分析汇总']);
+                // Sheet 1: 汇总统计
+                ws.addRow(['应收账款汇总统计']);
                 ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.getCell('A1').alignment = { horizontal: 'left', vertical: 'middle' };
                 ws.mergeCells('A1:D1');
 
+                ws.addRow([]);
+                ws.addRow(['基本信息']);
+                ws.getCell('A3').font = { bold: true };
+
+                ws.addRow(['统计截止日期', cutoffDate ? cutoffDate.toLocaleDateString('zh-CN') : '-']);
+                ws.getCell('B4').font = { bold: true };
+
                 const stats = calculateStats();
-                ws.addRow([`截止日期: ${cutoffDate ? cutoffDate.toLocaleDateString() : '-'}`]);
-                ws.addRow([]);
-                ws.addRow(['指标', '数值']);
-                ws.addRow(['客户总数', stats.totalCustomers]);
-                ws.addRow(['出库单数', stats.outboundCount]);
-                ws.addRow(['退货单数', stats.returnCount]);
-                ws.addRow(['出库金额', stats.outboundAmount]);
-                ws.addRow(['退货金额', stats.returnAmount]);
-                ws.addRow(['未结算总金额', stats.totalUnsettled]);
+                ws.addRow(['客户总数', `${stats.totalCustomers}个`]);
+                ws.getCell('B5').font = { bold: true };
+
+                ws.addRow(['出库单总数', `${stats.outboundCount}单`]);
+                ws.getCell('B6').font = { bold: true };
+
+                ws.addRow(['退货单总数', `${stats.returnCount}单`]);
+                ws.getCell('B7').font = { bold: true };
+
+                ws.addRow(['出库金额', `${formatNumber(stats.outboundAmount)}元`]);
+                ws.getCell('B8').font = { bold: true };
+
+                ws.addRow(['退货金额', `${formatNumber(stats.returnAmount)}元`]);
+                ws.getCell('B9').font = { bold: true };
+                if (stats.returnAmount < 0) ws.getCell('B9').font = { bold: true, color: { argb: 'FFDC2626' } };
+
+                ws.addRow(['未结算总金额', `${formatNumber(stats.totalUnsettled)}元`]);
+                ws.getCell('B10').font = { bold: true };
 
                 ws.addRow([]);
-                ws.addRow(['账龄分布']);
-                ws.addRow(['区间', '单据数', '金额', '占比']);
-                
+                ws.addRow(['账龄分布（按单据维度，全表统一口径）']);
+                ws.getCell('A12').font = { bold: true };
+
+                // 账龄分布表头
+                ws.addRow(['账龄区间', '单据数', '未结算金额', '占比']);
+                const headerRow = ws.rowCount;
+                for (let col = 1; col <= 4; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${headerRow}`), styles.headerBlue);
+                }
+
+                // 账龄数据
                 const total = stats.totalUnsettled || 1;
-                ws.addRow(['0-30天(正常)', stats.ageDistribution.normal.count, stats.ageDistribution.normal.amount, (stats.ageDistribution.normal.amount / total * 100).toFixed(1) + '%']);
-                ws.addRow(['31-90天(紧急)', stats.ageDistribution.warning.count, stats.ageDistribution.warning.amount, (stats.ageDistribution.warning.amount / total * 100).toFixed(1) + '%']);
-                ws.addRow(['91-180天(紧急)', stats.ageDistribution.danger.count, stats.ageDistribution.danger.amount, (stats.ageDistribution.danger.amount / total * 100).toFixed(1) + '%']);
+                const ageData = [
+                    { label: '0-30天', data: stats.ageDistribution.normal, style: styles.normalGreen },
+                    { label: '31-90天', data: stats.ageDistribution.warning, style: styles.warningYellow },
+                    { label: '91-180天', data: stats.ageDistribution.danger, style: styles.dangerOrange },
+                    { label: '180天以上', data: stats.ageDistribution.danger180, style: styles.danger180Red }
+                ];
 
+                let rowNum = ws.rowCount + 1;
+                for (const item of ageData) {
+                    ws.addRow([
+                        item.label,
+                        item.data.count,
+                        item.data.amount,
+                        `${(item.data.amount / total * 100).toFixed(1)}%`
+                    ]);
+                    for (let col = 1; col <= 4; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), item.style);
+                    }
+                    rowNum++;
+                }
+
+                // 合计行
+                const totalCount = stats.outboundCount;
+                const totalAmount = stats.totalUnsettled;
+                ws.addRow(['合计', totalCount, totalAmount, '100.0%']);
+                for (let col = 1; col <= 4; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.totalRow);
+                }
+
+                // 业务员排名
                 ws.addRow([]);
-                ws.addRow(['业务员排名']);
+                ws.addRow(['业务员未结算排名']);
+                ws.getCell(`A${ws.rowCount}`).font = { bold: true };
+
                 ws.addRow(['排名', '业务员', '客户数', '未结算金额']);
+                const empHeaderRow = ws.rowCount;
+                for (let col = 1; col <= 4; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${empHeaderRow}`), styles.headerBlue);
+                }
+
                 const empStats = getSalespersonStats();
+                rowNum = ws.rowCount + 1;
                 empStats.forEach((s, i) => {
                     ws.addRow([i + 1, s.name, s.customerCount, s.totalUnsettled]);
+                    for (let col = 1; col <= 4; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.normalCell);
+                        if (col === 4) {
+                            applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.numberCell);
+                        }
+                    }
+                    rowNum++;
                 });
 
-                ws.getRow(1).font = { bold: true, size: 14 };
-                ws.columns.forEach(col => col.width = 20);
+                // 重点关注
+                ws.addRow([]);
+                ws.addRow(['重点关注']);
+                ws.getCell(`A${ws.rowCount}`).font = { bold: true };
+
+                ws.addRow(['超10万客户数', `${stats.over100kCustomers || 0}个`]);
+                ws.addRow(['负金额客户数', `${stats.negativeAmountCustomers || 0}个`]);
+                ws.addRow(['TOP10客户占比', `${stats.top10Percent.toFixed(1)}%`]);
+                ws.addRow(['TOP10客户金额', `${formatNumber(stats.top10Amount)}元`]);
+                ws.addRow(['91天以上应收', `${formatNumber(stats.over90DaysAmount)}元`]);
+                ws.addRow(['最早未结算单据', stats.earliestDate ? stats.earliestDate.toLocaleDateString('zh-CN') : '-']);
+
+                ws.columns.forEach(col => {
+                    col.width = 18;
+                });
+                ws.getColumn(2).width = 25;
+                ws.getColumn(4).width = 20;
 
             } else if (tabIdx === 1) {
-                ws.addRow(['业务员账龄汇总']);
-                ws.getCell('A1').font = { bold: true, size: 14 };
+                // Sheet 2: 业务员账龄汇总
+                ws.addRow([`应收账款业务员账龄汇总表（截至${cutoffDate ? cutoffDate.toLocaleDateString('zh-CN').replace(/\//g, '年').replace(/(\d+)年(\d+)年(\d+)日/, '$1年$2月$3日') : '年 月 日'})）`]);
+                ws.getCell('A1').font = { bold: true, size: 12 };
                 ws.mergeCells('A1:I1');
 
                 ws.addRow(['业务员', '客户数', '未结算总额', '0-30天(正常)', '31-90天(紧急)', '91-180天(紧急)', '180天以上(紧急)', '紧急金额', '30天以上占比']);
-                
+                const headerRow = ws.rowCount;
+                for (let col = 1; col <= 9; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${headerRow}`), styles.headerBlue);
+                }
+
                 const empStats = getSalespersonStats();
+                rowNum = ws.rowCount + 1;
                 empStats.forEach(s => {
-                    ws.addRow([s.name, s.customerCount, s.totalUnsettled, s.normalAmount, s.warningAmount, s.dangerAmount, 0, s.warningAmount + s.dangerAmount, (s.over30DaysPercent / 100).toFixed(2)]);
+                    ws.addRow([
+                        s.name, s.customerCount, s.totalUnsettled,
+                        s.normalAmount, s.warningAmount, s.dangerAmount, s.danger180Amount,
+                        s.urgentAmount, `${s.over30DaysPercent.toFixed(1)}%`
+                    ]);
+                    for (let col = 1; col <= 9; col++) {
+                        const cell = ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`);
+                        if (col === 1) {
+                            applyCellStyle(cell, styles.normalCell);
+                        } else {
+                            applyCellStyle(cell, col === 3 ? styles.numberCell : styles.normalCell);
+                        }
+                    }
+                    rowNum++;
                 });
 
+                // 合计行
                 const total = empStats.reduce((acc, s) => ({
                     customerCount: acc.customerCount + s.customerCount,
                     totalUnsettled: acc.totalUnsettled + s.totalUnsettled,
                     normalAmount: acc.normalAmount + s.normalAmount,
                     warningAmount: acc.warningAmount + s.warningAmount,
-                    dangerAmount: acc.dangerAmount + s.dangerAmount
-                }), { customerCount: 0, totalUnsettled: 0, normalAmount: 0, warningAmount: 0, dangerAmount: 0 });
-                
-                ws.addRow(['合计', total.customerCount, total.totalUnsettled, total.normalAmount, total.warningAmount, total.dangerAmount, 0, total.warningAmount + total.dangerAmount, ((total.warningAmount + total.dangerAmount) / (total.totalUnsettled || 1)).toFixed(2)]);
+                    dangerAmount: acc.dangerAmount + s.dangerAmount,
+                    danger180Amount: acc.danger180Amount + s.danger180Amount
+                }), { customerCount: 0, totalUnsettled: 0, normalAmount: 0, warningAmount: 0, dangerAmount: 0, danger180Amount: 0 });
+                total.urgentAmount = total.warningAmount + total.dangerAmount + total.danger180Amount;
+                total.over30DaysPercent = total.totalUnsettled !== 0 ? (total.urgentAmount / total.totalUnsettled * 100) : 0;
 
-                ws.getRow(2).eachCell(cell => cell.style = headerStyle);
+                ws.addRow(['合计', total.customerCount, total.totalUnsettled, total.normalAmount, total.warningAmount, total.dangerAmount, total.danger180Amount, total.urgentAmount, `${total.over30DaysPercent.toFixed(1)}%`]);
+                for (let col = 1; col <= 9; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.totalRow);
+                }
+
+                ws.columns.forEach(col => col.width = 16);
 
             } else if (tabIdx === 2) {
-                ws.addRow(['全部未结算客户明细']);
-                ws.getCell('A1').font = { bold: true, size: 14 };
+                // Sheet 3: 全部未结算客户明细
+                const customers = getCustomerDetails();
+                const totalAmount = customers.reduce((s, c) => s + c.unsettled, 0);
+
+                ws.addRow([`应收账款未结算客户明细表（客户数：${customers.length} ｜ 总金额：${formatNumber(totalAmount)}元）`]);
+                ws.getCell('A1').font = { bold: true, size: 12 };
                 ws.mergeCells('A1:H1');
 
                 ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '账龄区间', '最早单据日期', '最近单据日期', '业务员']);
-                
-                const customers = getCustomerDetails();
+                const headerRow = ws.rowCount;
+                for (let col = 1; col <= 8; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${headerRow}`), styles.headerBlue);
+                }
+
+                rowNum = ws.rowCount + 1;
                 customers.forEach((c, i) => {
-                    ws.addRow([i + 1, c.name, c.unsettled, c.count, c.ageRange, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-', c.salesperson]);
+                    let rowStyle = styles.normalCell;
+                    if (c.unsettled < 0) rowStyle = { ...styles.normalCell, font: { color: { argb: 'FFDC2626' }, bold: true } };
+
+                    ws.addRow([
+                        i + 1, c.name, c.unsettled, c.count, c.ageRange,
+                        c.earliestDate ? c.earliestDate.toLocaleDateString('zh-CN') : '-',
+                        c.latestDate ? c.latestDate.toLocaleDateString('zh-CN') : '-',
+                        c.salesperson
+                    ]);
+                    for (let col = 1; col <= 8; col++) {
+                        const cell = ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`);
+                        if (col === 3) {
+                            applyCellStyle(cell, { ...styles.numberCell, font: rowStyle.font });
+                        } else {
+                            applyCellStyle(cell, rowStyle);
+                        }
+                    }
+                    rowNum++;
                 });
 
-                ws.getRow(2).eachCell(cell => cell.style = headerStyle);
+                ws.columns.forEach(col => col.width = 14);
+                ws.getColumn(2).width = 40;
 
             } else if (tabIdx === 3) {
+                // Sheet 4: 按账龄分类
+                ws.addRow(['应收账款账龄分析表（按单据维度）']);
+                ws.getCell('A1').font = { bold: true, size: 14 };
+                ws.mergeCells('A1:G1');
+
                 const customers = getCustomerDetails();
                 const groups = {
                     normal: customers.filter(c => c.ageGroup === 'normal'),
                     warning: customers.filter(c => c.ageGroup === 'warning'),
-                    danger: customers.filter(c => c.ageGroup === 'danger')
+                    danger: customers.filter(c => c.ageGroup === 'danger'),
+                    danger180: customers.filter(c => c.ageGroup === 'danger180')
                 };
 
-                let rowNum = 1;
-                
                 const groupConfig = [
-                    { key: 'normal', label: '0-30天(正常)' },
-                    { key: 'warning', label: '31-90天(紧急)' },
-                    { key: 'danger', label: '91-180天以上(紧急)' }
+                    { key: 'normal', label: '0-30天（正常）', class: 'normal', style: styles.normalGreen, urgency: '正常' },
+                    { key: 'warning', label: '31-90天（紧急）', class: 'warning', style: styles.warningYellow, urgency: '紧急' },
+                    { key: 'danger', label: '91-180天（紧急）', class: 'danger', style: styles.dangerOrange, urgency: '紧急' },
+                    { key: 'danger180', label: '180天以上（紧急）', class: 'danger', style: styles.danger180Red, urgency: '紧急' }
                 ];
 
                 for (const cfg of groupConfig) {
                     const items = groups[cfg.key];
                     if (!items || items.length === 0) continue;
 
-                    ws.addRow([cfg.label]);
-                    ws.getCell(`A${rowNum}`).font = { bold: true };
-                    rowNum++;
+                    const totalAmount = items.reduce((s, c) => s + c.unsettled, 0);
 
-                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '紧急程度', '最早单据日期', '最近单据日期']);
-                    ws.getRow(rowNum).eachCell(cell => cell.style = headerStyle);
-                    rowNum++;
+                    ws.addRow([`${cfg.label}｜ ${items.length}个客户 ｜ 未结算合计：${formatNumber(totalAmount)}元`]);
+                    ws.getCell(`A${ws.rowCount}`).font = { bold: true };
+                    ws.mergeCells(`A${ws.rowCount}:G${ws.rowCount}`);
 
+                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '最早单据', '最近单据', '业务员']);
+                    const headerRow = ws.rowCount;
+                    for (let col = 1; col <= 7; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${headerRow}`), styles.headerBlue);
+                    }
+
+                    rowNum = ws.rowCount + 1;
                     items.forEach((c, i) => {
-                        ws.addRow([i + 1, c.name, c.unsettled, c.count, cfg.label, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-']);
+                        ws.addRow([
+                            i + 1, c.name, c.unsettled, c.count,
+                            c.earliestDate ? c.earliestDate.toLocaleDateString('zh-CN') : '-',
+                            c.latestDate ? c.latestDate.toLocaleDateString('zh-CN') : '-',
+                            c.salesperson
+                        ]);
+                        for (let col = 1; col <= 7; col++) {
+                            const cell = ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`);
+                            if (col === 3) {
+                                applyCellStyle(cell, styles.numberCell);
+                            } else {
+                                applyCellStyle(cell, styles.normalCell);
+                            }
+                        }
                         rowNum++;
                     });
 
-                    const total = items.reduce((s, c) => s + c.unsettled, 0);
-                    ws.addRow(['小计', '', total, items.length, '', '', '']);
-                    ws.getRow(rowNum).eachCell(cell => {
-                        cell.font = { bold: true };
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
-                    });
-                    rowNum++;
-                    rowNum++;
+                    // 小计行
+                    ws.addRow(['', '小计', totalAmount, items.length, '', '', '']);
+                    for (let col = 1; col <= 7; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.subtotalRow);
+                    }
+
+                    ws.addRow([]);
                 }
 
+                ws.columns.forEach(col => col.width = 16);
+                ws.getColumn(2).width = 40;
+
             } else {
+                // Sheet 5-18: 各业务员明细
                 const empIdx = tabIdx - 4;
                 const empNames = Object.keys(employeeData).sort();
                 const empName = empNames[empIdx];
@@ -1850,25 +2210,29 @@
 
                 ws.addRow([`${empName} — 应收账款账龄明细`]);
                 ws.getCell('A1').font = { bold: true, size: 14 };
-                ws.mergeCells('A1:F1');
+                ws.mergeCells('A1:H1');
 
                 let totalUnsettled = 0;
-                let normalAmount = 0, warningAmount = 0, dangerAmount = 0;
-                const customerGroups = { normal: [], warning: [], danger: [] };
+                let normalAmount = 0, warningAmount = 0, dangerAmount = 0, danger180Amount = 0;
+                const customerGroups = { normal: [], warning: [], danger: [], danger180: [] };
 
                 for (const [custName, custData] of Object.entries(empData.customers)) {
                     totalUnsettled += custData.unsettled;
                     
-                    let maxDanger = 0, maxWarning = 0;
+                    let maxDanger = 0, maxWarning = 0, maxDanger180 = 0;
                     for (const r of custData.records) {
                         if (r.ageGroup) {
-                            if (r.ageGroup.level === 'danger') maxDanger++;
+                            if (r.ageGroup.level === 'danger180') maxDanger180++;
+                            else if (r.ageGroup.level === 'danger') maxDanger++;
                             else if (r.ageGroup.level === 'warning') maxWarning++;
                         }
                     }
                     
                     let group = 'normal';
-                    if (maxDanger > 0) {
+                    if (maxDanger180 > 0) {
+                        group = 'danger180';
+                        danger180Amount += custData.unsettled;
+                    } else if (maxDanger > 0) {
                         group = 'danger';
                         dangerAmount += custData.unsettled;
                     } else if (maxWarning > 0) {
@@ -1887,54 +2251,72 @@
                     });
                 }
 
-                ws.addRow([`客户数: ${Object.keys(empData.customers).length} | 未结算总额: ${formatCurrency(totalUnsettled)} | 30天以上紧急: ${formatCurrency(warningAmount + dangerAmount)}`]);
-                ws.addRow([]);
+                const urgentAmount = warningAmount + dangerAmount + danger180Amount;
+                const urgentPercent = totalUnsettled !== 0 ? (urgentAmount / totalUnsettled * 100) : 0;
+
+                ws.addRow([`客户数：${Object.keys(empData.customers).length} ｜ 未结算总额：${formatNumber(totalUnsettled)}元 ｜ 30天以上紧急：${formatNumber(urgentAmount)}元（占比${urgentPercent.toFixed(1)}%）`]);
+                ws.mergeCells(`A2:H2`);
 
                 const groupConfig = [
-                    { key: 'normal', label: '0-30天(正常)' },
-                    { key: 'warning', label: '31-90天(紧急)' },
-                    { key: 'danger', label: '91天以上(紧急)' }
+                    { key: 'normal', label: '0-30天（正常）', style: styles.normalGreen, urgency: '正常', level: '0-30天' },
+                    { key: 'warning', label: '31-90天（紧急）', style: styles.warningYellow, urgency: '紧急', level: '31-90天' },
+                    { key: 'danger', label: '91-180天（紧急）', style: styles.dangerOrange, urgency: '紧急', level: '91-180天' },
+                    { key: 'danger180', label: '180天以上（紧急）', style: styles.danger180Red, urgency: '紧急', level: '180天以上' }
                 ];
 
                 for (const cfg of groupConfig) {
                     const items = customerGroups[cfg.key];
                     if (!items || items.length === 0) continue;
 
-                    ws.addRow([cfg.label]);
-                    ws.getCell('A' + (ws.rowCount)).font = { bold: true };
-                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '最早单据日期', '最近单据日期']);
-                    
-                    const headerRow = ws.rowCount;
-                    ws.getRow(headerRow).eachCell(cell => cell.style = headerStyle);
-
-                    items.forEach((c, i) => {
-                        ws.addRow([i + 1, c.name, c.unsettled, c.count, c.earliestDate ? c.earliestDate.toLocaleDateString() : '-', c.latestDate ? c.latestDate.toLocaleDateString() : '-']);
-                    });
-
                     const groupTotal = items.reduce((s, c) => s + c.unsettled, 0);
-                    ws.addRow(['小计', '', groupTotal, items.length, '', '']);
-                    ws.getRow(ws.rowCount).eachCell(cell => {
-                        cell.font = { bold: true };
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+
+                    ws.addRow([`${cfg.label}｜ ${items.length}个客户 ｜ 金额合计：${formatNumber(groupTotal)}元`]);
+                    ws.getCell(`A${ws.rowCount}`).font = { bold: true };
+                    ws.mergeCells(`A${ws.rowCount}:H${ws.rowCount}`);
+
+                    ws.addRow(['序号', '客户名称', '未结算金额', '单据数', '账龄区间', '紧急程度', '最早单据日期', '最近单据日期']);
+                    const headerRow = ws.rowCount;
+                    for (let col = 1; col <= 8; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${headerRow}`), styles.headerBlue);
+                    }
+
+                    rowNum = ws.rowCount + 1;
+                    items.forEach((c, i) => {
+                        ws.addRow([
+                            i + 1, c.name, c.unsettled, c.count, cfg.level, cfg.urgency,
+                            c.earliestDate ? c.earliestDate.toLocaleDateString('zh-CN') : '-',
+                            c.latestDate ? c.latestDate.toLocaleDateString('zh-CN') : '-'
+                        ]);
+                        for (let col = 1; col <= 8; col++) {
+                            const cell = ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`);
+                            if (col === 3) {
+                                applyCellStyle(cell, styles.numberCell);
+                            } else {
+                                applyCellStyle(cell, styles.normalCell);
+                            }
+                        }
+                        rowNum++;
                     });
+
+                    // 小计行
+                    ws.addRow(['', '小计', groupTotal, items.length, cfg.level, cfg.urgency, '', '']);
+                    for (let col = 1; col <= 8; col++) {
+                        applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.subtotalRow);
+                    }
+
                     ws.addRow([]);
                 }
 
-                ws.addRow(['总计', '', totalUnsettled, '', '', '']);
-                ws.getRow(ws.rowCount).eachCell(cell => {
-                    cell.font = { bold: true };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBFDBFE' } };
-                });
-            }
+                // 总计行
+                rowNum = ws.rowCount + 1;
+                ws.addRow(['', '总计', totalUnsettled, Object.keys(empData.customers).length, '', '', '', '']);
+                for (let col = 1; col <= 8; col++) {
+                    applyCellStyle(ws.getCell(`${String.fromCharCode(64 + col)}${rowNum}`), styles.totalRow);
+                }
 
-            ws.columns.forEach(column => {
-                let maxLength = 10;
-                column.eachCell({ includeEmpty: true }, cell => {
-                    const length = cell.value ? String(cell.value).length : 0;
-                    if (length > maxLength) maxLength = Math.min(length, 50);
-                });
-                column.width = maxLength + 2;
-            });
+                ws.columns.forEach(col => col.width = 16);
+                ws.getColumn(2).width = 40;
+            }
         }
 
         // ==================== Event Handlers ====================
