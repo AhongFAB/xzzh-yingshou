@@ -1070,6 +1070,40 @@ header::before, .
     font-weight: 600;
     color: white;
 }
+.bar-fill.normal {
+    background: linear-gradient(90deg, #43e97b, #38d96a);
+}
+.bar-fill.warning {
+    background: linear-gradient(90deg, #ffa726, #ff9800);
+}
+.bar-fill.danger {
+    background: linear-gradient(90deg, #ff5252, #f44336);
+}
+.bar-fill.danger180 {
+    background: linear-gradient(90deg, #d32f2f, #b71c1c);
+}
+
+/* 账龄区间颜色小条 */
+.age-indicator {
+    display: inline-block;
+    width: 3px;
+    height: 1em;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.age-indicator.normal {
+    background: #43e97b;
+}
+.age-indicator.warning {
+    background: #ffa726;
+}
+.age-indicator.danger {
+    background: #ff5252;
+}
+.age-indicator.danger180 {
+    background: #d32f2f;
+}
 
 .bar-value {
     font-size: 13px;
@@ -2148,7 +2182,7 @@ header::before, .
                 html += `
                     <div class="age-group">
                         <div class="age-group-header ${cfg.class}">
-                            <div class="age-group-title">${cfg.label}</div>
+                            <div class="age-group-title"><span class="age-indicator ${cfg.class}"></span>${cfg.label}</div>
                             <div class="age-group-stats">
                                 客户数: ${items.length} | 金额合计: ${formatCurrency(totalAmount)}
                             </div>
@@ -2270,7 +2304,7 @@ header::before, .
                 html += `
                     <div class="age-group">
                         <div class="age-group-header ${cfg.class}">
-                            <div class="age-group-title">${cfg.label}</div>
+                            <div class="age-group-title"><span class="age-indicator ${cfg.class}"></span>${cfg.label}</div>
                             <div class="age-group-stats">
                                 客户数: ${items.length} | 金额合计: ${formatCurrency(groupTotal)}
                             </div>
