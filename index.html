@@ -931,11 +931,8 @@
                 if (!row || row.length === 0) continue;
                 
                 // Skip summary/total rows (合计, 总计, 小计 etc.)
-                const firstCell = String(row[0] || '').trim();
-                if (/^(合计|总计|小计|汇总|合\s*计|总\s*计)$/.test(firstCell)) continue;
-                // Also skip if customer column contains these keywords and it looks like a total row
-                const customerCell = colIndices.customer >= 0 ? String(row[colIndices.customer] || '').trim() : '';
-                if (/^(合计|总计|小计|汇总)$/.test(customerCell)) continue;
+                const rowText = row.map(c => String(c || '').trim()).join(' ');
+                if (/合计|总计|小计|汇总/.test(rowText)) continue;
 
                 const getVal = (idx) => {
                     if (idx < 0 || idx >= row.length) return '';
