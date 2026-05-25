@@ -887,7 +887,7 @@
             // Parse cutoff date from row 2
             const row2 = rawData[1];
             if (row2 && row2.length > 0) {
-                const row2Text = String(row2).join(' ');
+                const row2Text = Array.isArray(row2) ? row2.join(' ') : String(row2);
                 const dateMatch = row2Text.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g);
                 if (dateMatch && dateMatch.length >= 2) {
                     const endDate = dateMatch[dateMatch.length - 1];
