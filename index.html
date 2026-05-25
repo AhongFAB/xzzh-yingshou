@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         :root {
             /* 天蓝色系主色调 */
@@ -585,6 +586,11 @@
             border: 1px solid var(--border);
         }
 
+.btn-accent {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
         .btn-secondary:hover {
             background: rgba(30, 41, 59, 1);
             border-color: var(--primary);
@@ -785,6 +791,12 @@
                 </button>
                 <button class="btn btn-secondary" id="exportAllBtn">
                     📥 导出全部(18个Sheet)
+                </button>
+                <button class="btn btn-accent" id="screenshotCurrentBtn">
+                    📸 截图当前页
+                </button>
+                <button class="btn btn-accent" id="screenshotAllSalesBtn">
+                    📸 批量截图业务员
                 </button>
             </div>
         </div>
@@ -2370,6 +2382,8 @@
 
             document.getElementById('exportCurrentBtn').addEventListener('click', exportCurrentTab);
             document.getElementById('exportAllBtn').addEventListener('click', exportAllTabs);
+            document.getElementById('screenshotCurrentBtn').addEventListener('click', screenshotCurrentTab);
+            document.getElementById('screenshotAllSalesBtn').addEventListener('click', screenshotAllSalespersons);
 
             const today = new Date();
             cutoffDateInput.value = today.toISOString().split('T')[0];
@@ -2382,6 +2396,70 @@
                 });
             });
         }
+
+        // ==================== Screenshot Functions ====================
+        async function screenshotCurrentTab() {
+            const tabContent = document.getElementById('tabContent');
+            if (!tabContent) { alert('请先上传数据'); return; }
+            
+            const activeTab = document.querySelector('.tab-btn.active');
+            const tabName = activeTab ? activeTab.textContent.trim() : '分析';
+            
+            try {
+                const canvas = await html2canvas(tabContent, {
+                    backgroundColor: '#0f172a',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+                const link = document.createElement('a');
+                const dateStr = cutoffDate ? cutoffDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                link.download = `应收分析_${tabName}_${dateStr}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error('Screenshot error:', err);
+                alert('截图失败: ' + err.message);
+            }
+        }
+
+        async function screenshotAllSalespersons() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const salesTabs = [];
+            for (const btn of tabBtns) {
+                const name = btn.textContent.trim();
+                if (name !== '汇总统计' && name !== '业务员账龄汇总' && name !== '全部客户' && name !== '按账龄分类') {
+                    salesTabs.push(btn);
+                }
+            }
+            
+            if (salesTabs.length === 0) { alert('未找到业务员Tab'); return; }
+            
+            const dateStr = cutoffDate ? cutoffDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            const tabContent = document.getElementById('tabContent');
+            
+            for (const btn of salesTabs) {
+                btn.click();
+                await new Promise(r => setTimeout(r, 300));
+                
+                try {
+                    const canvas = await html2canvas(tabContent, {
+                        backgroundColor: '#0f172a',
+                        scale: 2,
+                        useCORS: true,
+                        logging: false
+                    });
+                    const link = document.createElement('a');
+                    link.download = `应收明细_${btn.textContent.trim()}_${dateStr}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    await new Promise(r => setTimeout(r, 500));
+                } catch (err) {
+                    console.error('Screenshot error for', btn.textContent, err);
+                }
+            }
+        }
+
     </script>
 </body>
 </html>
