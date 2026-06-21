@@ -1493,7 +1493,7 @@ header::before, .
         function matchColumn(headers, targetColumns) {
             for (const col of targetColumns) {
                 const idx = headers.findIndex(h => 
-                    String(h).trim().toLowerCase() === col.toLowerCase()
+                    String(h).trim().includes(col)
                 );
                 if (idx !== -1) return idx;
             }
@@ -1589,9 +1589,11 @@ header::before, .
                 const row = rawData[i];
                 if (!row || row.length === 0) continue;
                 
-                // Skip summary/total rows (合计, 总计, 小计 etc.)
-                const rowText = row.map(c => String(c || '').trim()).join(' ');
-                if (/合计|总计|小计|汇总/.test(rowText)) continue;
+                // Skip summary/total rows: only check first cell (序号) and docNo cell
+                // 避免误杀备注栏含"合计"的正常数据行
+                const seqCell = String(row[0] || '').trim();
+                const docNoCell = colIndices.docNo >= 0 ? String(row[colIndices.docNo] || '').trim() : '';
+                if (/合计|总计|小计|汇总/.test(seqCell) || /合计|总计|小计|汇总/.test(docNoCell)) continue;
 
                 const getVal = (idx) => {
                     if (idx < 0 || idx >= row.length) return '';
@@ -1607,12 +1609,21 @@ header::before, .
                 const unsettledRaw = getVal(colIndices.unsettled);
                 const salesAmount = parseFloat(getVal(colIndices.salesAmount)) || 0;
                 const settled = parseFloat(getVal(colIndices.settled)) || 0;
-                const unsettled = parseFloat(unsettledRaw) || 0;
+                let unsettled = 0;
+                let unsettledParsed = false;
+                if (unsettledRaw !== '' && unsettledRaw !== null && unsettledRaw !== undefined) {
+                    const cleaned = String(unsettledRaw).replace(/[￥¥,，]/g, '').trim();
+                    const parsed = parseFloat(cleaned);
+                    if (!isNaN(parsed)) {
+                        unsettled = parsed;
+                        unsettledParsed = true;
+                    }
+                }
 
                 // Only include rows where unsettled has a value (non-empty)
                 if (unsettledRaw === '' || unsettledRaw === null || unsettledRaw === undefined) continue;
 
-                if (unsettled !== 0) {
+                if (unsettled !== 0 || unsettledParsed) {
                     const docDate = parseDate(docDateStr);
                     const age = docDate && cutoffDate ? daysBetween(docDate, cutoffDate) : null;
                     const ageGroup = age !== null ? getAgeGroup(age) : null;
